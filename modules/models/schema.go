@@ -8,15 +8,15 @@ import (
 
 type User struct {
 	gorm.Model
-	Firstname  string
-	Lastname   string
-	Username   string `gorm:"unique"`
+	Firstname  string `gorm:"not null"`
+	Lastname   string `gorm:"not null"`
 	Email      string `gorm:"type:varchar(100);unique_index"`
-	Password   string
+	Username   string `gorm:"unique;not null"`
+	Password   string `gorm:"not null"`
 	ProfileImg string
 	TeamID     uint `gorm:"index"`
-	IsAdmin    bool
-	IsVip      bool
+	IsAdmin    bool `gorm:"default:false"`
+	IsVip      bool `gorm:"default:false"`
 	Team       Team `gorm:"foreignKey:TeamID"`
 }
 
