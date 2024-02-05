@@ -1,0 +1,8 @@
+/Note/
+/publics/
+*.txt
+*.yml
+*.yaml
+.env
+go.sum
+go.mod
