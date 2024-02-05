@@ -9,5 +9,5 @@ type AuthRepository interface {
 	HashFunc(string) (string, error)
 	WhereTeamID(string) (uint, error)
 	WhereTeamName(uint) (string, error)
-	// Login(Login) (*models.User, error)
+	CheckUser(string) (*models.User, error)
 }

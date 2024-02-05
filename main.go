@@ -15,6 +15,7 @@ func main() {
 	authHandler := adaptersauth.NewAuthHandler(authService)
 
 	app.Post("/register", authHandler.Register)
+	app.Post("/Login", authHandler.Login)
 
 	app.Listen(os.Getenv("URL"))
 }

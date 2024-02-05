@@ -1,6 +1,7 @@
 package adaptersauth
 
 import (
+	"errors"
 	"false_api/modules/models"
 
 	"golang.org/x/crypto/bcrypt"
@@ -43,4 +44,15 @@ func (r *authRepositoryImpl) WhereTeamName(id uint) (string, error) {
 		return "", err
 	}
 	return team.Name, nil
+}
+func (r *authRepositoryImpl) CheckUser(username string) (*models.User, error) {
+	user := models.User{}
+	err := r.db.Where("username = ?", username).First(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New("record not found")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

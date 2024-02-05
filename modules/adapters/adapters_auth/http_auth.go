@@ -28,3 +28,18 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 		"user_info": userInfo,
 	})
 }
+
+func (h *authHandler) Login(c *fiber.Ctx) error {
+	user := coreauth.Login{}
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	token, userInfo, err := h.service.Login(user)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(fiber.Map{
+		"token":     token,
+		"user_info": userInfo,
+	})
+}

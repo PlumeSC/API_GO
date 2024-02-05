@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Login struct {
@@ -32,7 +33,7 @@ type UserInfo struct {
 type AuthService interface {
 	Register(Register) (string, *UserInfo, error)
 	CreateToken(models.User) (string, error)
-	// Login(Login)
+	Login(Login) (string, *UserInfo, error)
 }
 
 type authServiceImpl struct {
@@ -64,23 +65,11 @@ func (s *authServiceImpl) Register(userReg Register) (string, *UserInfo, error) 
 	if err != nil {
 		return "", nil, err
 	}
-	token, err := s.CreateToken(*userx)
+	token, userInfo, err := s.PrepareInfo(*userx)
 	if err != nil {
 		return "", nil, err
 	}
-	teamName, err := s.repo.WhereTeamName(user.TeamID)
-	if err != nil {
-		return "", nil, err
-	}
-	userInfo := UserInfo{
-		Firstname:  userx.Username,
-		Lastname:   userx.Lastname,
-		ProfileImg: userx.ProfileImg,
-		TeamName:   teamName,
-		IsAdmin:    userx.IsAdmin,
-		IsVip:      userx.IsVip,
-	}
-	return token, &userInfo, nil
+	return token, userInfo, nil
 }
 
 func (s *authServiceImpl) CreateToken(user models.User) (string, error) {
@@ -94,4 +83,40 @@ func (s *authServiceImpl) CreateToken(user models.User) (string, error) {
 		return "", err
 	}
 	return t, nil
+}
+
+func (s *authServiceImpl) PrepareInfo(user models.User) (string, *UserInfo, error) {
+	token, err := s.CreateToken(user)
+	if err != nil {
+		return "", nil, err
+	}
+	teamName, err := s.repo.WhereTeamName(user.TeamID)
+	if err != nil {
+		return "", nil, err
+	}
+	userInfo := UserInfo{
+		Firstname:  user.Username,
+		Lastname:   user.Lastname,
+		ProfileImg: user.ProfileImg,
+		TeamName:   teamName,
+		IsAdmin:    user.IsAdmin,
+		IsVip:      user.IsVip,
+	}
+	return token, &userInfo, nil
+}
+
+func (s *authServiceImpl) Login(userLogin Login) (string, *UserInfo, error) {
+	user, err := s.repo.CheckUser(userLogin.Username)
+	if err != nil {
+		return "", nil, err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
+	if err != nil {
+		return "", nil, err
+	}
+	token, userInfo, err := s.PrepareInfo(*user)
+	if err != nil {
+		return "", nil, err
+	}
+	return token, userInfo, nil
 }
