@@ -1,4 +1,4 @@
-package adaptersauth
+package adapterauth
 
 import (
 	coreauth "false_api/modules/core/core_auth"

@@ -21,11 +21,23 @@ type User struct {
 }
 
 type League struct {
-	ID      uint `gorm:"primaryKey"`
-	Name    string
-	Country string
-	Logo    string
-	Flag    string
+	ID       uint `gorm:"primaryKey"`
+	Name     string
+	LeagueID uint
+	Country  string
+	Code     string
+	Logo     string
+	Flag     string
+}
+
+type Season struct {
+	ID       uint `gorm:"primaryKey"`
+	Season   uint
+	LeagueID uint
+	League   League `gorm:"foreignKey:LeagueID"`
+	Start    time.Time
+	End      time.Time
+	Current  bool
 }
 
 type Team struct {
@@ -37,7 +49,7 @@ type Team struct {
 	StadiumName string `gorm:"unique"`
 	City        string
 	Capacity    uint
-	LeagueID    string
+	LeagueID    uint
 	League      League `gorm:"foreignKey:LeagueID"`
 }
 
@@ -63,22 +75,26 @@ type Event struct {
 	Assist    string
 	EventTime uint
 	Event     string
+	Team      Team  `gorm:"foreignKey:TeamID"`
+	Match     Match `gorm:"foreignKey:MatchID"`
 }
 
 type Standing struct {
-	ID     uint `gorm:"primaryKey"`
-	TeamID uint `gorm:"index"`
-	Season uint `gorm:"index"`
-	Rank   uint
-	Played uint
-	Won    uint
-	Drawn  uint
-	Lost   uint
-	GF     uint
-	GA     uint
-	GD     uint
-	Points uint
-	Form   string
+	ID       uint `gorm:"primaryKey"`
+	TeamID   uint `gorm:"index"`
+	SeasonID uint `gorm:"index"`
+	Rank     uint
+	Played   uint `gorm:"default:0"`
+	Won      uint `gorm:"default:0"`
+	Drawn    uint `gorm:"default:0"`
+	Lost     uint `gorm:"default:0"`
+	GF       uint `gorm:"default:0"`
+	GA       uint `gorm:"default:0"`
+	GD       uint `gorm:"default:0"`
+	Points   uint `gorm:"default:0"`
+	Form     string
+	Team     Team   `gorm:"foreignKey:TeamID"`
+	Season   Season `gorm:"foreignKey:SeasonID"`
 }
 
 type Videos struct {
@@ -88,11 +104,8 @@ type Videos struct {
 	Name     string
 	Videos   string
 	CreateAt time.Time
-}
-
-type Season struct {
-	ID     uint `gorm:"primaryKey"`
-	Season uint
+	Team     Team  `gorm:"foreignKey:TeamID"`
+	Match    Match `gorm:"foreignKey:MatchID"`
 }
 
 type News struct {
@@ -103,6 +116,8 @@ type News struct {
 	Content  string
 	HeroImg  string
 	CreateAt time.Time
+	Team     Team `gorm:"foreignKey:TeamID"`
+	User     User `gorm:"foreignKey:AdminID"`
 }
 
 type Player struct {
@@ -116,8 +131,8 @@ type Player struct {
 	Weight      uint
 	Injuries    bool
 	Photo       string
-	TeamID      string `gorm:"index"`
-	Team        Team   `gorm:"foreignKey:TeamID"`
+	TeamID      uint `gorm:"index"`
+	Team        Team `gorm:"foreignKey:TeamID"`
 }
 
 type Position struct {
@@ -135,4 +150,5 @@ type PlayerStatistics struct {
 	Number      uint
 	PositionID  uint     `gorm:"index"`
 	Position    Position `gorm:"foreignKey:PositionID"`
+	Player      Player   `gorm:"foreignKey:PlayerID"`
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"false_api/modules"
-	adaptersauth "false_api/modules/adapters/adapters_auth"
+	adapterapi "false_api/modules/adapters/adapter_api"
+	adapterauth "false_api/modules/adapters/adapter_auth"
+	coreapi "false_api/modules/core/core_api"
 	coreauth "false_api/modules/core/core_auth"
 	"os"
 )
@@ -10,12 +12,17 @@ import (
 func main() {
 	app, db := modules.Init()
 
-	authAdapter := adaptersauth.NewAuthRepository(db)
+	authAdapter := adapterauth.NewAuthRepository(db)
 	authService := coreauth.NewAuthService(authAdapter)
-	authHandler := adaptersauth.NewAuthHandler(authService)
+	authHandler := adapterauth.NewAuthHandler(authService)
+	apiAdapter := adapterapi.NewApiRepository(db)
+	apiRequest := adapterapi.NewApiRequest()
+	apiService := coreapi.NewApiService(apiAdapter, apiRequest)
+	apiHandler := adapterapi.NewApiHandler(apiService)
 
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
+	app.Post("/createtable", apiHandler.CreateTables)
 
 	app.Listen(os.Getenv("URL"))
 }
