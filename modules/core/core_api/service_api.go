@@ -44,6 +44,7 @@ func (s apiService) goFirstOrCreateLeague(info Info, wg *sync.WaitGroup, leagueC
 			return
 		}
 		leagueChan <- id
+		leagueChan <- id
 		return
 	}
 	leagueChan <- id
@@ -88,6 +89,7 @@ func (s apiService) goFirstOrCreateSeason(info Info, wg *sync.WaitGroup, seasonC
 			}
 			leagueStructChan <- *league
 			leagueID = <-leagueChan
+
 		}
 		id, err := s.CreateSeason(*league, &leagueID)
 		if err != nil {
@@ -241,33 +243,61 @@ func (s apiService) CreateStandings(info Info) error {
 }
 
 // ________________________________________________________________
-func (s apiService) createPlayer(player Player) error {
+func (s apiService) createPlayer(player Player) (uint, error) {
+	var playerID uint
+	id, err := s.repo.FindTeam(player.Statistics[0].Team.Name)
+	if err != nil {
+		return 0, err
+	}
+	height, err := strconv.Atoi(player.Player.Height)
+	if err != nil {
+		return 0, err
+	}
+	weight, err := strconv.Atoi(player.Player.Weight)
+	if err != nil {
+		return 0, err
+	}
+	players := models.Player{
+		Name:        player.Player.Name,
+		Firstname:   player.Player.Firstname,
+		Lastname:    player.Player.Lastname,
+		Age:         uint(player.Player.Age),
+		Nationality: player.Player.Nationality,
+		Height:      uint(height),
+		Weight:      uint(weight),
+		Injuries:    player.Player.Injured,
+		Photo:       player.Player.Photo,
+		TeamID:      id,
+	}
+	playerID, err = s.repo.CreatePlayer(players)
+	if err != nil {
+		return 0, err
+	}
+	return playerID, nil
+}
+func (s apiService) createPlayerStatistics(playerID uint, player Player) error {
+	res := player.Statistics[0]
+	number, ok := res.Games.Number.(float64)
+	if !ok {
+		return errors.New("expected type float64")
+	}
+	statistics := models.PlayerStatistics{
+		PlayerID: playerID,
+		Number:   uint(number),
+	}
+	err := s.repo.CreatePlayerStatistics(playerID, statistics)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s apiService) createPlayerAndPlayerStatistics(player Players) error {
 	for _, v := range player.Response {
-		id, err := s.repo.FindTeam(v.Statistics[0].Team.Name)
+		playerID, err := s.createPlayer(v)
 		if err != nil {
 			return err
 		}
-		height, err := strconv.Atoi(v.Player.Height)
-		if err != nil {
-			return err
-		}
-		weight, err := strconv.Atoi(v.Player.Weight)
-		if err != nil {
-			return err
-		}
-		players := models.Player{
-			Name:        v.Player.Name,
-			Firstname:   v.Player.Firstname,
-			Lastname:    v.Player.Lastname,
-			Age:         uint(v.Player.Age),
-			Nationality: v.Player.Nationality,
-			Height:      uint(height),
-			Weight:      uint(weight),
-			Injuries:    v.Player.Injured,
-			Photo:       v.Player.Photo,
-			TeamID:      id,
-		}
-		err = s.repo.CreatePlayer(players)
+		err = s.createPlayerStatistics(playerID, v)
 		if err != nil {
 			return err
 		}
@@ -277,7 +307,7 @@ func (s apiService) createPlayer(player Player) error {
 func (s apiService) CreatePlayers(info Info) error {
 	var wg sync.WaitGroup
 	// var m sync.Mutex
-	var once sync.Once
+	// var once sync.Once
 	errChan := make(chan error, 4)
 	reserve := make(chan struct{}, 4)
 	totalPages := 1
@@ -295,12 +325,10 @@ func (s apiService) CreatePlayers(info Info) error {
 					errChan <- err
 					return
 				}
-				once.Do(func() {
-					if page == 1 && totalPages == 1 {
-						totalPages = players.Paging.Total
-					}
-				})
-				err = s.createPlayer(*players)
+				if page == 1 && totalPages == 1 {
+					totalPages = players.Paging.Total
+				}
+				err = s.createPlayerAndPlayerStatistics(*players)
 				if err != nil {
 					errChan <- err
 					return
@@ -308,9 +336,11 @@ func (s apiService) CreatePlayers(info Info) error {
 			}(currentPages)
 		}
 	}()
-	wg.Wait()
-	close(reserve)
-	defer close(errChan)
+	go func() {
+		wg.Wait()
+		close(reserve)
+		close(errChan)
+	}()
 	for err := range errChan {
 		return err
 	}
@@ -424,7 +454,7 @@ func (s apiService) CreatePlayers(info Info) error {
 // 	return nil
 // }
 
-func (s apiService) Player(player Player) error {
+func (s apiService) Player(player Players) error {
 	// players := models.Player{}
 	for _, v := range player.Response {
 		id, err := s.repo.FindTeam(v.Statistics[0].Team.Name)
@@ -451,7 +481,7 @@ func (s apiService) Player(player Player) error {
 			Photo:       v.Player.Photo,
 			TeamID:      id,
 		}
-		err = s.repo.CreatePlayer(players)
+		_, err = s.repo.CreatePlayer(players)
 		if err != nil {
 			return err
 		}
@@ -476,11 +506,7 @@ func (s apiService) Player(player Player) error {
 // 	return nil
 // }
 
-func (s apiService) Match(match Match) {
-
-}
-
-func (s apiService) CreateMatch(info Info) error {
+func (s apiService) CreateMatchx(info Info) error {
 	if info.Round > 38 {
 		return errors.New("round must equal or less than 38")
 	}

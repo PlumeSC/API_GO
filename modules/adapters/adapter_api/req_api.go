@@ -119,7 +119,7 @@ func (r apiRequest) GetStandings(league uint, season uint) (*coreapi.Standings, 
 	return &standingInfo, nil
 }
 
-func (r apiRequest) GetPlayer(league uint, season uint, page int) (*coreapi.Player, error) {
+func (r apiRequest) GetPlayer(league uint, season uint, page int) (*coreapi.Players, error) {
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/players?league=%v&season=%v&page=%v", league, season, page)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -143,7 +143,7 @@ func (r apiRequest) GetPlayer(league uint, season uint, page int) (*coreapi.Play
 	if err != nil {
 		return nil, err
 	}
-	var playerInfo coreapi.Player
+	var playerInfo coreapi.Players
 	err = json.Unmarshal(body, &playerInfo)
 	if err != nil {
 		return nil, err

@@ -40,7 +40,7 @@ func Init() (*fiber.App, *gorm.DB) {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&models.User{}, &models.League{}, &models.Team{}, &models.Match{}, &models.Event{},
-		&models.Standing{}, &models.Videos{}, &models.News{}, &models.Player{}, &models.Position{},
+		&models.Standing{}, &models.Videos{}, &models.News{}, &models.Player{},
 		&models.PlayerStatistics{})
 
 	return app, db

@@ -132,8 +132,16 @@ func (r apiRepository) CreateTeam(team models.Team) (uint, error) {
 	return team.ID, nil
 }
 
-func (r apiRepository) CreatePlayer(player models.Player) error {
+func (r apiRepository) CreatePlayer(player models.Player) (uint, error) {
 	err := r.db.Where("Name = ?", player.Name).FirstOrCreate(&player).Error
+	if err != nil {
+		return 0, err
+	}
+	return player.ID, nil
+}
+
+func (r apiRepository) CreatePlayerStatistics(id uint, statistics models.PlayerStatistics) error {
+	err := r.db.Where("PlayerID = ?", id).FirstOrCreate(&statistics).Error
 	if err != nil {
 		return err
 	}

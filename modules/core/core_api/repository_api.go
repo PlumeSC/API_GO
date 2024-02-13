@@ -12,7 +12,6 @@ type ApiRepository interface {
 	CheckLeague(uint) (bool, *uint, error)
 	CheckSeason(uint) (bool, *uint, error)
 
-	CreatePlayer(models.Player) error
 	CreateMatch(uint, uint, models.Match) error
 
 	FindLeague(uint) (uint, error)
@@ -21,4 +20,7 @@ type ApiRepository interface {
 	CreateSeason(models.Season) (uint, error)
 	FindTeam(string) (uint, error)
 	CreateTeam(models.Team) (uint, error)
+
+	CreatePlayer(models.Player) (uint, error)
+	CreatePlayerStatistics(uint, models.PlayerStatistics) error
 }

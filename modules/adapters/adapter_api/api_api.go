@@ -33,7 +33,7 @@ func (h apiHandler) CreaatePlayer(c *fiber.Ctx) error {
 	if err := c.BodyParser(&info); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
-	err := h.service.CreatePlayer(info)
+	err := h.service.CreatePlayers(info)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}

@@ -133,24 +133,27 @@ type Player struct {
 	Weight      uint
 	Injuries    bool
 	Photo       string
-	TeamID      uint `gorm:"index"`
-	Team        Team `gorm:"foreignKey:TeamID"`
+
+	TeamID uint `gorm:"index"`
+	Team   Team `gorm:"foreignKey:TeamID"`
 }
 
-type Position struct {
-	ID           uint `gorm:"primaryKey"`
-	PositionName string
-	Position     string
-}
+// type Position struct {
+// 	ID           uint `gorm:"primaryKey"`
+// 	PositionName string
+// 	Position     string
+// }
 
 type PlayerStatistics struct {
 	ID          uint `gorm:"primaryKey"`
 	PlayerID    uint `gorm:"index"`
-	PositionID  uint `gorm:"index"`
 	Appearances uint
 	Lineup      uint
 	Minutes     uint
 	Number      uint
-	Position    Position `gorm:"foreignKey:PositionID"`
-	Player      Player   `gorm:"foreignKey:PlayerID"`
+	Rating      uint
+	Position    string
+	Player      Player `gorm:"foreignKey:PlayerID"`
+	// PositionID  uint `gorm:"index"`
+	// Position    Position `gorm:"foreignKey:PositionID"`
 }
