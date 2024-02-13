@@ -152,10 +152,10 @@ func (r apiRequest) GetPlayer(league uint, season uint, page int) (*coreapi.Play
 }
 
 func (r apiRequest) GetFixture(league uint, season uint, round int) (*coreapi.Match, error) {
-	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/fixtures?league=%v&season=%v&round=Regular%20Season%20-%20", league, season)
-	url2 := fmt.Sprintf("%v%v", url, round)
+	x := "%20"
+	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/fixtures?league=%v&season=%v&round=Regular%vSeason%v-%v%v", league, season, x, x, x, round)
 
-	req, err := http.NewRequest("GET", url2, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -9,11 +9,9 @@ import (
 )
 
 type ApiService interface {
-	// CreateTables(Info) error
+	CreateStandings(Info) error
 	CreatePlayers(Info) error
 	CreateMatch(Info) error
-
-	CreateStandings(Info) error
 }
 
 type apiService struct {
@@ -349,198 +347,66 @@ func (s apiService) CreatePlayers(info Info) error {
 }
 
 // ________________________________________________________________
-// ________________________________________________________________
-// ________________________________________________________________
-// ________________________________________________________________
-// ________________________________________________________________
-// ________________________________________________________________
-// ________________________________________________________________
-
-// func (s apiService) FindOrCreateSeason(league League, leagueID uint) (uint, error) {
-// 	layout := "2006-01-02"
-// 	start, err := time.Parse(layout, league.Response[0].Seasons[0].Start)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	end, err := time.Parse(layout, league.Response[0].Seasons[0].End)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	season := models.Season{
-// 		Season:   uint(league.Response[0].Seasons[0].Year),
-// 		LeagueID: leagueID,
-// 		Start:    start,
-// 		End:      end,
-// 		Current:  league.Response[0].Seasons[0].Current,
-// 	}
-// 	seasonID, err := s.repo.FindOrCreateSeason(season)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	return seasonID, nil
-// }
-
-// func (s apiService) CreateTables(info Info) error {
-// 	league := &League{}
-// 	var leagueID *uint
-// 	var seasonID *uint
-// 	var teamID *uint
-// 	haveSeason, seasonID, err := s.repo.CheckSeason(info.Season)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if !haveSeason {
-// 		var haveLeague bool
-// 		haveLeague, leagueID, err = s.repo.CheckLeague(info.League)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if !haveLeague {
-// 			league, err = s.api.GetLeague(info.League, info.Season)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			leagueID, err = s.CreateLeague(*league)
-// 			if err != nil {
-// 				return err
-// 			}
-// 		}
-// 		seasonID, err = s.CreateSeason(*league, leagueID)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	standings, err := s.api.GetStandings(info.League, info.Season)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	for i, v := range standings.Response[0].League.Standings[0] {
-// 		teamID, err = s.repo.FindTeam(v.Team.Name)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if *teamID == 0 {
-// 			team, err := s.api.GetTeam(uint(v.Team.ID), *leagueID, *seasonID)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			res := team.Response[0]
-// 			teamInfo := models.Team{
-// 				Name:        res.Team.Name,
-// 				CodeName:    res.Team.Code,
-// 				Founded:     uint(res.Team.Founded),
-// 				Logo:        res.Team.Logo,
-// 				StadiumName: res.Venue.Name,
-// 				City:        res.Venue.City,
-// 				Capacity:    uint(res.Venue.Capacity),
-// 				LeagueID:    *leagueID,
-// 			}
-// 			teamID, err = s.repo.CreateTeam(teamInfo)
-// 			if err != nil {
-// 				return err
-// 			}
-// 		}
-// 		standing := models.Standing{
-// 			Rank:     uint(i),
-// 			Form:     "",
-// 			TeamID:   *teamID,
-// 			SeasonID: *seasonID,
-// 		}
-// 		err = s.repo.CreateTables(standing)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
-func (s apiService) Player(player Players) error {
-	// players := models.Player{}
-	for _, v := range player.Response {
-		id, err := s.repo.FindTeam(v.Statistics[0].Team.Name)
-		if err != nil {
-			return err
-		}
-		height, err := strconv.Atoi(v.Player.Height)
-		if err != nil {
-			return err
-		}
-		weight, err := strconv.Atoi(v.Player.Weight)
-		if err != nil {
-			return err
-		}
-		players := models.Player{
-			Name:        v.Player.Name,
-			Firstname:   v.Player.Firstname,
-			Lastname:    v.Player.Lastname,
-			Age:         uint(v.Player.Age),
-			Nationality: v.Player.Nationality,
-			Height:      uint(height),
-			Weight:      uint(weight),
-			Injuries:    v.Player.Injured,
-			Photo:       v.Player.Photo,
-			TeamID:      id,
-		}
-		_, err = s.repo.CreatePlayer(players)
-		if err != nil {
-			return err
-		}
+func (s apiService) CreateMatch(info Info) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, 4)
+	reserve := make(chan struct{}, 4)
+	round, err := s.repo.CountStandings(info.League, info.Season)
+	if err != nil {
+		return err
+	}
+	round2 := (round - 1) * 2
+	for i := 1; i <= int(round2); i++ {
+		wg.Add(1)
+		go s.goCreateMatch(i, info, reserve, errChan, &wg)
+	}
+	wg.Wait()
+	close(reserve)
+	close(errChan)
+	for err := range errChan {
+		return err
 	}
 	return nil
 }
 
-// func (s apiService) CreatePlayer(info Info) error {
-// 	pages := 1
-// 	totalPages := 1
-// 	for pages <= totalPages {
-// 		players, err := s.api.GetPlayer(info.League, info.Season, pages)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if err = s.Player(*players); err != nil {
-// 			return err
-// 		}
-// 		totalPages = players.Paging.Total
-// 		pages++
-// 	}
-// 	return nil
-// }
-
-func (s apiService) CreateMatchx(info Info) error {
-	if info.Round > 38 {
-		return errors.New("round must equal or less than 38")
-	}
-	matchs, err := s.api.GetFixture(info.League, info.Season, int(info.Round))
+func (s apiService) goCreateMatch(i int, info Info, reserve chan struct{}, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	reserve <- struct{}{}
+	defer func() { <-reserve }()
+	matchs, err := s.api.GetFixture(info.League, info.Season, i)
 	if err != nil {
-		return err
+		errChan <- err
+		return
 	}
-	for _, v := range matchs.Response {
-		homeTeamID, err := s.repo.FindTeam(v.Teams.Home.Name)
+	for j := 0; j < len(matchs.Response); j++ {
+		res := matchs.Response[j]
+		homeTeamID, err := s.repo.FindTeam(res.Teams.Home.Name)
 		if err != nil {
-			return err
+			errChan <- err
+			return
 		}
-		awayTeamID, err := s.repo.FindTeam(v.Teams.Away.Name)
+		awayTeamID, err := s.repo.FindTeam(res.Teams.Away.Name)
 		if err != nil {
-			return err
+			errChan <- err
+			return
 		}
-		_, seasonID, err := s.repo.CheckSeason(info.Season)
+		season, err := s.repo.FindSeason(uint(res.League.Season))
 		if err != nil {
-			return err
+			errChan <- err
+			return
 		}
 		match := models.Match{
 			HomeTeamID: homeTeamID,
 			AwayTeamID: awayTeamID,
-			SeasonID:   *seasonID,
-			HomeGoal:   uint(v.Goals.Home),
-			AwayGoal:   uint(v.Goals.Away),
-			Rounded:    uint(info.Round),
-			MatchDay:   v.Fixture.Date,
+			SeasonID:   season,
+			Rounded:    uint(i),
+			MatchDay:   res.Fixture.Date,
 		}
-		err = s.repo.CreateMatch(homeTeamID, awayTeamID, match)
+		err = s.repo.CreateMatch(match)
 		if err != nil {
-			return err
+			errChan <- err
+			return
 		}
 	}
 
-	return nil
 }

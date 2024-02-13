@@ -15,66 +15,6 @@ func NewApiRepository(db *gorm.DB) *apiRepository {
 	return &apiRepository{db: db}
 }
 
-func (r apiRepository) CheckLeague(id uint) (bool, *uint, error) {
-	league := models.League{}
-	err := r.db.Where("LeagueID = ?", id).First(&league).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, &league.ID, nil
-	}
-	if err != nil {
-		return false, &league.ID, err
-	}
-
-	return true, &league.ID, nil
-}
-
-func (r apiRepository) FindOrCreateSeason(season models.Season) (uint, error) {
-	if err := r.db.Where(models.Season{Season: season.Season}).FirstOrCreate(&season).Error; err != nil {
-		return 0, nil
-	}
-	return season.Season, nil
-}
-
-func (r apiRepository) CreateTables(standing models.Standing) error {
-	result := r.db.Where("TeamID = ? AND SeasonID = ?", standing.TeamID, standing.SeasonID).Attrs(&standing).FirstOrCreate(&standing)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
-func (r apiRepository) FindAndCreateTeamName(name string) (uint, error) {
-	team := models.Team{}
-	if err := r.db.FirstOrCreate(&team, models.Team{Name: name}).Error; err != nil {
-		return 0, nil
-	}
-	return team.ID, nil
-}
-
-func (r apiRepository) CheckSeason(id uint) (bool, *uint, error) {
-	season := models.Season{}
-	err := r.db.Where("Season = ?", id).First(&season).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false, &season.Season, nil
-	}
-	if err != nil {
-		return false, &season.Season, err
-	}
-	return true, &season.Season, nil
-}
-
-func (r apiRepository) CreateMatch(home uint, away uint, matchs models.Match) error {
-	err := r.db.Where("HomeTeamID = ? AND AwayTeamID = ?", home, away).FirstOrCreate(&matchs)
-	if err.Error != nil {
-		return err.Error
-	}
-	return nil
-}
-
-// _________________________________
-// _________________________________
-// _________________________________
-// _________________________________
-// _________________________________
 func (r apiRepository) FindLeague(league uint) (uint, error) {
 	lea := models.League{}
 	err := r.db.Where("LeagueID = ?", league).First(&lea).Error
@@ -132,6 +72,14 @@ func (r apiRepository) CreateTeam(team models.Team) (uint, error) {
 	return team.ID, nil
 }
 
+func (r apiRepository) CreateTables(standing models.Standing) error {
+	result := r.db.Where("TeamID = ? AND SeasonID = ?", standing.TeamID, standing.SeasonID).Attrs(&standing).FirstOrCreate(&standing)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func (r apiRepository) CreatePlayer(player models.Player) (uint, error) {
 	err := r.db.Where("Name = ?", player.Name).FirstOrCreate(&player).Error
 	if err != nil {
@@ -144,6 +92,40 @@ func (r apiRepository) CreatePlayerStatistics(id uint, statistics models.PlayerS
 	err := r.db.Where("PlayerID = ?", id).FirstOrCreate(&statistics).Error
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (r apiRepository) CountStandings(league uint, season uint) (uint, error) {
+	var count int64
+	leagueID, err := r.FindLeague(league)
+	if err != nil {
+		return 0, err
+	}
+	seasonID, err := r.FindSeasonByLeague(leagueID, season)
+	if err != nil {
+		return 0, err
+	}
+	err = r.db.Model(&models.Standing{}).Where("seasonID = ?", seasonID).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return uint(count), nil
+}
+
+func (r apiRepository) FindSeasonByLeague(leagueID uint, season uint) (uint, error) {
+	seasonX := models.Season{}
+	err := r.db.Where("season = ? AND LeagueID = ?", season, leagueID).First(&seasonX).Error
+	if err != nil {
+		return 0, err
+	}
+	return seasonX.ID, nil
+}
+
+func (r apiRepository) CreateMatch(matchs models.Match) error {
+	err := r.db.Where("HomeTeamID = ? AND AwayTeamID = ? AND seasonID = ?", matchs.HomeTeamID, matchs.AwayTeamID, matchs.SeasonID).FirstOrCreate(&matchs)
+	if err.Error != nil {
+		return err.Error
 	}
 	return nil
 }

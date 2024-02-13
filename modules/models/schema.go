@@ -58,8 +58,8 @@ type Match struct {
 	HomeTeamID uint `gorm:"index"`
 	AwayTeamID uint `gorm:"index"`
 	Fixture    uint
-	HomeGoal   uint
-	AwayGoal   uint
+	HomeGoal   uint `gorm:"default:0"`
+	AwayGoal   uint `gorm:"default:0"`
 	SeasonID   uint `gorm:"index"`
 	Rounded    uint
 	MatchDay   time.Time
@@ -138,12 +138,6 @@ type Player struct {
 	Team   Team `gorm:"foreignKey:TeamID"`
 }
 
-// type Position struct {
-// 	ID           uint `gorm:"primaryKey"`
-// 	PositionName string
-// 	Position     string
-// }
-
 type PlayerStatistics struct {
 	ID          uint `gorm:"primaryKey"`
 	PlayerID    uint `gorm:"index"`
@@ -154,6 +148,4 @@ type PlayerStatistics struct {
 	Rating      uint
 	Position    string
 	Player      Player `gorm:"foreignKey:PlayerID"`
-	// PositionID  uint `gorm:"index"`
-	// Position    Position `gorm:"foreignKey:PositionID"`
 }

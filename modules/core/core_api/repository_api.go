@@ -5,22 +5,17 @@ import (
 )
 
 type ApiRepository interface {
-	FindOrCreateSeason(models.Season) (uint, error)
-	CreateTables(models.Standing) error
-	FindAndCreateTeamName(string) (uint, error)
-	// CheckLeagueSeason(uint, uint) (bool, error)
-	CheckLeague(uint) (bool, *uint, error)
-	CheckSeason(uint) (bool, *uint, error)
-
-	CreateMatch(uint, uint, models.Match) error
-
 	FindLeague(uint) (uint, error)
 	FindSeason(uint) (uint, error)
 	CreateLeague(models.League) (uint, error)
 	CreateSeason(models.Season) (uint, error)
 	FindTeam(string) (uint, error)
 	CreateTeam(models.Team) (uint, error)
+	CreateTables(models.Standing) error
 
 	CreatePlayer(models.Player) (uint, error)
 	CreatePlayerStatistics(uint, models.PlayerStatistics) error
+
+	CountStandings(uint, uint) (uint, error)
+	CreateMatch(models.Match) error
 }
