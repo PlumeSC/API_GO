@@ -22,7 +22,7 @@ func main() {
 
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
-	app.Post("/createtable", apiHandler.CreateTables)    // league,season
+	// app.Post("/createtable", apiHandler.CreateTables)    // league,season
 	app.Post("/createplayers", apiHandler.CreaatePlayer) // league,season
 	app.Post("/creatematch", apiHandler.CreateMatch)     // league,season,round
 

@@ -41,7 +41,7 @@ type Season struct {
 }
 
 type Team struct {
-	ID          uint   `gorm:"primaryKey"`
+	gorm.Model
 	Name        string `gorm:"unique"`
 	CodeName    string `gorm:"unique"`
 	Founded     uint
