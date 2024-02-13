@@ -1,14 +1,16 @@
 package coreapi
 
 import (
+	"errors"
 	"false_api/modules/models"
+	"strconv"
 	"time"
 )
 
 type ApiService interface {
-	CreateLeague(league League) (*uint, error)
-	FindOrCreateSeason(league League, leagueID uint) (uint, error)
-	CreateTables(StandingInfo) error
+	CreateTables(Info) error
+	CreatePlayer(Info) error
+	CreateMatch(Info) error
 }
 
 type apiService struct {
@@ -85,7 +87,7 @@ func (s apiService) CreateSeason(league League, leagueID *uint) (*uint, error) {
 	return &season.ID, nil
 }
 
-func (s apiService) CreateTables(info StandingInfo) error {
+func (s apiService) CreateTables(info Info) error {
 	league := &League{}
 	var leagueID *uint
 	var seasonID *uint
@@ -158,5 +160,100 @@ func (s apiService) CreateTables(info StandingInfo) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (s apiService) Player(player Player) error {
+	// players := models.Player{}
+	for _, v := range player.Response {
+		id, err := s.repo.FindTeam(v.Statistics[0].Team.Name)
+		if err != nil {
+			return err
+		}
+		height, err := strconv.Atoi(v.Player.Height)
+		if err != nil {
+			return err
+		}
+		weight, err := strconv.Atoi(v.Player.Weight)
+		if err != nil {
+			return err
+		}
+		players := models.Player{
+			Name:        v.Player.Name,
+			Firstname:   v.Player.Firstname,
+			Lastname:    v.Player.Lastname,
+			Age:         uint(v.Player.Age),
+			Nationality: v.Player.Nationality,
+			Height:      uint(height),
+			Weight:      uint(weight),
+			Injuries:    v.Player.Injured,
+			Photo:       v.Player.Photo,
+			TeamID:      *id,
+		}
+		err = s.repo.CreatePlayer(players)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s apiService) CreatePlayer(info Info) error {
+	pages := 1
+	totalPages := 1
+	for pages <= totalPages {
+		players, err := s.api.GetPlayer(info.League, info.Season, pages)
+		if err != nil {
+			return err
+		}
+		if err = s.Player(*players); err != nil {
+			return err
+		}
+		totalPages = players.Paging.Total
+		pages++
+	}
+	return nil
+}
+
+func (s apiService) Match(match Match) {
+
+}
+
+func (s apiService) CreateMatch(info Info) error {
+	if info.Round > 38 {
+		return errors.New("round must equal or less than 38")
+	}
+	matchs, err := s.api.GetFixture(info.League, info.Season, int(info.Round))
+	if err != nil {
+		return err
+	}
+	for _, v := range matchs.Response {
+		homeTeamID, err := s.repo.FindTeam(v.Teams.Home.Name)
+		if err != nil {
+			return err
+		}
+		awayTeamID, err := s.repo.FindTeam(v.Teams.Away.Name)
+		if err != nil {
+			return err
+		}
+		_, seasonID, err := s.repo.CheckSeason(info.Season)
+		if err != nil {
+			return err
+		}
+		match := models.Match{
+			HomeTeamID: *homeTeamID,
+			AwayTeamID: *awayTeamID,
+			SeasonID:   *seasonID,
+			HomeGoal:   uint(v.Goals.Home),
+			AwayGoal:   uint(v.Goals.Away),
+			Rounded:    uint(info.Round),
+			MatchDay:   v.Fixture.Date,
+		}
+		err = s.repo.CreateMatch(*homeTeamID, *awayTeamID, match)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

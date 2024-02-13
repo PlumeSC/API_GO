@@ -15,4 +15,7 @@ type ApiRepository interface {
 
 	FindTeam(string) (*uint, error)
 	CreateTeam(models.Team) (*uint, error)
+
+	CreatePlayer(models.Player) error
+	CreateMatch(uint, uint, models.Match) error
 }

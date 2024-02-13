@@ -87,3 +87,19 @@ func (r apiRepository) CheckSeason(id uint) (bool, *uint, error) {
 	}
 	return true, &season.Season, nil
 }
+
+func (r apiRepository) CreatePlayer(player models.Player) error {
+	err := r.db.Where("Name = ?", player.Name).FirstOrCreate(&player).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r apiRepository) CreateMatch(home uint, away uint, matchs models.Match) error {
+	err := r.db.Where("HomeTeamID = ? AND AwayTeamID = ?", home, away).FirstOrCreate(&matchs)
+	if err.Error != nil {
+		return err.Error
+	}
+	return nil
+}

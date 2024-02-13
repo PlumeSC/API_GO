@@ -118,3 +118,70 @@ func (r apiRequest) GetStandings(league uint, season uint) (*coreapi.Standings, 
 
 	return &standingInfo, nil
 }
+
+func (r apiRequest) GetPlayer(league uint, season uint, page int) (*coreapi.Player, error) {
+	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/players?league=%v&season=%v&page=%v", league, season, page)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("X-RapidAPI-Key", os.Getenv("API_FOOTBALL"))
+	req.Header.Add("X-RapidAPI-Host", os.Getenv("API_HOST"))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d", res.StatusCode)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var playerInfo coreapi.Player
+	err = json.Unmarshal(body, &playerInfo)
+	if err != nil {
+		return nil, err
+	}
+	return &playerInfo, nil
+}
+
+func (r apiRequest) GetFixture(league uint, season uint, round int) (*coreapi.Match, error) {
+	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/fixtures?league=%v&season=%v&round=Regular%20Season%20-%20", league, season)
+	url2 := fmt.Sprintf("%v%v", url, round)
+
+	req, err := http.NewRequest("GET", url2, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("X-RapidAPI-Key", os.Getenv("API_FOOTBALL"))
+	req.Header.Add("X-RapidAPI-Host", os.Getenv("API_HOST"))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %v", res.StatusCode)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var match coreapi.Match
+	err = json.Unmarshal(body, &match)
+	if err != nil {
+		return nil, err
+	}
+
+	return &match, nil
+}

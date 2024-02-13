@@ -15,11 +15,39 @@ func NewApiHandler(service coreapi.ApiService) *apiHandler {
 }
 
 func (h apiHandler) CreateTables(c *fiber.Ctx) error {
-	info := coreapi.StandingInfo{}
+	info := coreapi.Info{}
 	if err := c.BodyParser(&info); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	err := h.service.CreateTables(info)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(fiber.Map{
+		"msg": "create ok",
+	})
+}
+
+func (h apiHandler) CreaatePlayer(c *fiber.Ctx) error {
+	info := coreapi.Info{}
+	if err := c.BodyParser(&info); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	err := h.service.CreatePlayer(info)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(fiber.Map{
+		"msg": "create ok",
+	})
+}
+
+func (h apiHandler) CreateMatch(c *fiber.Ctx) error {
+	info := coreapi.Info{}
+	if err := c.BodyParser(&info); err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+	}
+	err := h.service.CreateMatch(info)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}

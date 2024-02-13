@@ -22,7 +22,31 @@ func main() {
 
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
-	app.Post("/createtable", apiHandler.CreateTables)
+	app.Post("/createtable", apiHandler.CreateTables)    // league,season
+	app.Post("/createplayers", apiHandler.CreaatePlayer) // league,season
+	app.Post("/creatematch", apiHandler.CreateMatch)     // league,season,round
 
 	app.Listen(os.Getenv("URL"))
 }
+
+/*
+DONE
+standing
+season
+league
+player
+	position
+	playerStatistics
+*/
+
+/*
+NEXT
+
+match
+	event
+
+user
+	Admin
+		videos
+		News
+*/
