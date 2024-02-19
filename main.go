@@ -28,25 +28,3 @@ func main() {
 
 	app.Listen(os.Getenv("URL"))
 }
-
-/*
-DONE
-standing
-season
-league
-player
-	position
-	playerStatistics
-*/
-
-/*
-NEXT
-
-match
-	event
-
-user
-	Admin
-		videos
-		News
-*/
