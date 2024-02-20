@@ -1,4 +1,4 @@
-package adaptersauth
+package authadapter
 
 import (
 	"errors"

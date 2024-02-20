@@ -1,4 +1,4 @@
-package coreauth
+package authcore
 
 import (
 	"false_api/modules/models"

@@ -1,21 +1,21 @@
-package adaptersauth
+package authadapter
 
 import (
-	coreauth "false_api/modules/core/core_auth"
+	authcore "false_api/modules/core/auth_core"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type authHandler struct {
-	service coreauth.AuthService
+	service authcore.AuthService
 }
 
-func NewAuthHandler(service coreauth.AuthService) *authHandler {
+func NewAuthHandler(service authcore.AuthService) *authHandler {
 	return &authHandler{service: service}
 }
 
 func (h *authHandler) Register(c *fiber.Ctx) error {
-	user := coreauth.Register{}
+	user := authcore.Register{}
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
@@ -30,7 +30,7 @@ func (h *authHandler) Register(c *fiber.Ctx) error {
 }
 
 func (h *authHandler) Login(c *fiber.Ctx) error {
-	user := coreauth.Login{}
+	user := authcore.Login{}
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
