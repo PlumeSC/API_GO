@@ -21,6 +21,7 @@ type User struct {
 }
 
 type League struct {
+
 	gorm.Model
 	Name    string `gorm:"unique"`
 	Country string
@@ -43,6 +44,7 @@ type LeagueSeason struct {
 	Season   Season `gorm:"foreignKey:season_id"`
 	LeagueID uint
 	League   League `gorm:"foreignKey:league_id"`
+
 }
 
 type Team struct {
@@ -72,6 +74,7 @@ type Match struct {
 	LeagueSeason   LeagueSeason `gorm:"foreignKey:league_season_id"`
 	HomeTeam       Team         `gorm:"foreignKey:home_team_id"`
 	AwayTeam       Team         `gorm:"foreignKey:away_team_id"`
+
 }
 
 type Event struct {
@@ -82,6 +85,8 @@ type Event struct {
 	Assist    string
 	EventTime uint
 	Event     string
+	Team      Team  `gorm:"foreignKey:TeamID"`
+	Match     Match `gorm:"foreignKey:MatchID"`
 }
 
 type Standing struct {
@@ -110,6 +115,7 @@ type Videos struct {
 	Videos  string
 	Team    Team  `gorm:"foreignKey:team_id"`
 	Match   Match `gorm:"foreignKey:match_id"`
+
 }
 
 type News struct {
@@ -120,8 +126,10 @@ type News struct {
 	Content  string
 	HeroImg  string
 	CreateAt time.Time
+
 	Team     Team `gorm:"foreignKey:team_id"`
 	User     User `gorm:"foreignKey:user_id"`
+
 }
 
 type Player struct {
@@ -137,7 +145,9 @@ type Player struct {
 	Photo       string
 
 	TeamID uint `gorm:"index"`
+
 	Team   Team `gorm:"foreignKey:team_id"`
+
 }
 
 type PlayerStatistics struct {
