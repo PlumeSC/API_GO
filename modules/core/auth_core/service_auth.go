@@ -1,4 +1,4 @@
-package coreauth
+package authcore
 
 import (
 	"false_api/modules/models"
@@ -32,7 +32,6 @@ type UserInfo struct {
 
 type AuthService interface {
 	Register(Register) (string, *UserInfo, error)
-	CreateToken(models.User) (string, error)
 	Login(Login) (string, *UserInfo, error)
 }
 
@@ -65,28 +64,31 @@ func (s *authServiceImpl) Register(userReg Register) (string, *UserInfo, error) 
 	if err != nil {
 		return "", nil, err
 	}
-	token, userInfo, err := s.PrepareInfo(*userx)
+	token, userInfo, err := s.prepareInfo(*userx)
 	if err != nil {
 		return "", nil, err
 	}
 	return token, userInfo, nil
 }
 
-func (s *authServiceImpl) CreateToken(user models.User) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = user.ID
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-
-	t, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+func (s *authServiceImpl) Login(userLogin Login) (string, *UserInfo, error) {
+	user, err := s.repo.CheckUser(userLogin.Username)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return t, nil
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
+	if err != nil {
+		return "", nil, err
+	}
+	token, userInfo, err := s.prepareInfo(*user)
+	if err != nil {
+		return "", nil, err
+	}
+	return token, userInfo, nil
 }
 
-func (s *authServiceImpl) PrepareInfo(user models.User) (string, *UserInfo, error) {
-	token, err := s.CreateToken(user)
+func (s *authServiceImpl) prepareInfo(user models.User) (string, *UserInfo, error) {
+	token, err := s.createToken(user)
 	if err != nil {
 		return "", nil, err
 	}
@@ -105,18 +107,15 @@ func (s *authServiceImpl) PrepareInfo(user models.User) (string, *UserInfo, erro
 	return token, &userInfo, nil
 }
 
-func (s *authServiceImpl) Login(userLogin Login) (string, *UserInfo, error) {
-	user, err := s.repo.CheckUser(userLogin.Username)
+func (s *authServiceImpl) createToken(user models.User) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["user_id"] = user.ID
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	t, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userLogin.Password))
-	if err != nil {
-		return "", nil, err
-	}
-	token, userInfo, err := s.PrepareInfo(*user)
-	if err != nil {
-		return "", nil, err
-	}
-	return token, userInfo, nil
+	return t, nil
 }

@@ -17,27 +17,34 @@ type User struct {
 	TeamID     uint `gorm:"index"`
 	IsAdmin    bool `gorm:"default:false"`
 	IsVip      bool `gorm:"default:false"`
-	Team       Team `gorm:"foreignKey:TeamID"`
+	Team       Team `gorm:"foreignKey:team_id"`
 }
 
 type League struct {
-	ID       uint `gorm:"primaryKey"`
-	Name     string
-	LeagueID uint
-	Country  string
-	Code     string
-	Logo     string
-	Flag     string
+
+	gorm.Model
+	Name    string `gorm:"unique"`
+	Country string
+	Logo    string
+	Flag    string
+	ApiCode uint `gorm:"unique"`
 }
 
 type Season struct {
+	gorm.Model
+	Season  uint
+	Start   time.Time
+	End     time.Time
+	Current bool
+}
+
+type LeagueSeason struct {
 	ID       uint `gorm:"primaryKey"`
-	Season   uint
+	SeasonID uint
+	Season   Season `gorm:"foreignKey:season_id"`
 	LeagueID uint
-	League   League `gorm:"foreignKey:LeagueID"`
-	Start    time.Time
-	End      time.Time
-	Current  bool
+	League   League `gorm:"foreignKey:league_id"`
+
 }
 
 type Team struct {
@@ -50,23 +57,24 @@ type Team struct {
 	City        string
 	Capacity    uint
 	LeagueID    uint
-	League      League `gorm:"foreignKey:LeagueID"`
+	League      League `gorm:"foreignKey:league_id"`
 }
 
 type Match struct {
-	ID         uint `gorm:"primaryKey"`
-	HomeTeamID uint `gorm:"index"`
-	AwayTeamID uint `gorm:"index"`
-	Fixture    uint
-	HomeGoal   uint `gorm:"default:0"`
-	AwayGoal   uint `gorm:"default:0"`
-	SeasonID   uint `gorm:"index"`
-	Rounded    uint
-	MatchDay   time.Time
-	MatchTime  string
-	Season     Season `gorm:"foreignKey:SeasonID"`
-	HomeTeam   Team   `gorm:"foreignKey:HomeTeamID"`
-	AwayTeam   Team   `gorm:"foreignKey:AwayTeamID"`
+	gorm.Model
+	HomeTeamID     uint `gorm:"index"`
+	AwayTeamID     uint `gorm:"index"`
+	Fixture        uint
+	HomeGoal       uint `gorm:"default:0"`
+	AwayGoal       uint `gorm:"default:0"`
+	Rounded        uint
+	MatchDay       time.Time
+	MatchTime      string
+	LeagueSeasonID uint         `gorm:"index"`
+	LeagueSeason   LeagueSeason `gorm:"foreignKey:league_season_id"`
+	HomeTeam       Team         `gorm:"foreignKey:home_team_id"`
+	AwayTeam       Team         `gorm:"foreignKey:away_team_id"`
+
 }
 
 type Event struct {
@@ -82,48 +90,50 @@ type Event struct {
 }
 
 type Standing struct {
-	ID       uint `gorm:"primaryKey"`
-	TeamID   uint `gorm:"index"`
-	SeasonID uint `gorm:"index"`
-	Rank     uint
-	Played   uint `gorm:"default:0"`
-	Won      uint `gorm:"default:0"`
-	Drawn    uint `gorm:"default:0"`
-	Lost     uint `gorm:"default:0"`
-	GF       uint `gorm:"default:0"`
-	GA       uint `gorm:"default:0"`
-	GD       uint `gorm:"default:0"`
-	Points   uint `gorm:"default:0"`
-	Form     string
-	Team     Team   `gorm:"foreignKey:TeamID"`
-	Season   Season `gorm:"foreignKey:SeasonID"`
+	gorm.Model
+	TeamID         uint `gorm:"index"`
+	LeagueSeasonID uint `gorm:"index"`
+	Rank           uint
+	Played         uint `gorm:"default:0"`
+	Won            uint `gorm:"default:0"`
+	Drawn          uint `gorm:"default:0"`
+	Lost           uint `gorm:"default:0"`
+	GF             uint `gorm:"default:0"`
+	GA             uint `gorm:"default:0"`
+	GD             uint `gorm:"default:0"`
+	Points         uint `gorm:"default:0"`
+	Form           string
+	Team           Team         `gorm:"foreignKey:team_id"`
+	LeagueSeason   LeagueSeason `gorm:"foreignKey:league_season_id"`
 }
 
 type Videos struct {
-	ID       uint `gorm:"primaryKey"`
-	MatchID  uint `gorm:"index"`
-	TeamID   uint `gorm:"index"`
-	Name     string
-	Videos   string
-	CreateAt time.Time
-	Team     Team  `gorm:"foreignKey:TeamID"`
-	Match    Match `gorm:"foreignKey:MatchID"`
+	gorm.Model
+	MatchID uint `gorm:"index"`
+	TeamID  uint `gorm:"index"`
+	Name    string
+	Videos  string
+	Team    Team  `gorm:"foreignKey:team_id"`
+	Match   Match `gorm:"foreignKey:match_id"`
+
 }
 
 type News struct {
-	ID       uint `gorm:"primaryKey"`
-	AdminID  uint `gorm:"index"`
+	gorm.Model
+	UserID   uint `gorm:"index"`
 	TeamID   uint `gorm:"index"`
 	Title    string
 	Content  string
 	HeroImg  string
 	CreateAt time.Time
-	Team     Team `gorm:"foreignKey:TeamID"`
-	User     User `gorm:"foreignKey:AdminID"`
+
+	Team     Team `gorm:"foreignKey:team_id"`
+	User     User `gorm:"foreignKey:user_id"`
+
 }
 
 type Player struct {
-	ID          uint `gorm:"primaryKey"`
+	gorm.Model
 	Name        string
 	Firstname   string
 	Lastname    string
@@ -135,7 +145,9 @@ type Player struct {
 	Photo       string
 
 	TeamID uint `gorm:"index"`
-	Team   Team `gorm:"foreignKey:TeamID"`
+
+	Team   Team `gorm:"foreignKey:team_id"`
+
 }
 
 type PlayerStatistics struct {
@@ -147,5 +159,5 @@ type PlayerStatistics struct {
 	Number      uint
 	Rating      uint
 	Position    string
-	Player      Player `gorm:"foreignKey:PlayerID"`
+	Player      Player `gorm:"foreignKey:player_id"`
 }

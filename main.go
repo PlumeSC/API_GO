@@ -2,29 +2,32 @@ package main
 
 import (
 	"false_api/modules"
-	adapterapi "false_api/modules/adapters/adapter_api"
-	adapterauth "false_api/modules/adapters/adapter_auth"
-	coreapi "false_api/modules/core/core_api"
-	coreauth "false_api/modules/core/core_auth"
+
+	authadapter "false_api/modules/adapters/auth_adapters"
+	seasonadapters "false_api/modules/adapters/season_adapters"
+	authcore "false_api/modules/core/auth_core"
+	seasoncore "false_api/modules/core/season_core"
+
 	"os"
 )
 
 func main() {
 	app, db := modules.Init()
 
-	authAdapter := adapterauth.NewAuthRepository(db)
-	authService := coreauth.NewAuthService(authAdapter)
-	authHandler := adapterauth.NewAuthHandler(authService)
-	apiAdapter := adapterapi.NewApiRepository(db)
-	apiRequest := adapterapi.NewApiRequest()
-	apiService := coreapi.NewApiService(apiAdapter, apiRequest)
-	apiHandler := adapterapi.NewApiHandler(apiService)
+	authAdapter := authadapter.NewAuthRepository(db)
+	authService := authcore.NewAuthService(authAdapter)
+	authHandler := authadapter.NewAuthHandler(authService)
+	seasonAdapter := seasonadapters.NewSeasonRepository(db)
+	seasonApi := seasonadapters.NewApiFootball()
+	seasonService := seasoncore.NewSeasonService(seasonAdapter, seasonApi)
+	seasonHandler := seasonadapters.NewSeasonHandler(seasonService)
 
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
-	// app.Post("/createtable", apiHandler.CreateTables)    // league,season
-	app.Post("/createplayers", apiHandler.CreaatePlayer) // league,season
-	app.Post("/creatematch", apiHandler.CreateMatch)     // league,season,round
+	app.Post("/createseason", seasonHandler.CreateStandings) // league season
+	app.Post("/createplayer", seasonHandler.CreatePlayers)   // league season
+	app.Post("/creatematch", seasonHandler.CreateMatch)      // league season
+
 
 	app.Listen(os.Getenv("URL"))
 }
