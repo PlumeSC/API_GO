@@ -2,6 +2,7 @@ package seasoncore
 
 import (
 	"errors"
+	core "false_api/modules/core"
 	"false_api/modules/models"
 	"strconv"
 	"sync"
@@ -9,9 +10,9 @@ import (
 )
 
 type SeasonService interface {
-	CreateStandings(Info) error
-	CreatePlayers(Info) error
-	CreateMatch(Info) error
+	CreateStandings(core.Info) error
+	CreatePlayers(core.Info) error
+	CreateMatch(core.Info) error
 }
 
 type seasonService struct {
@@ -26,7 +27,7 @@ func NewSeasonService(repo SeasonRepository, api SeasonApi) *seasonService {
 	}
 }
 
-func (s seasonService) CreateStandings(info Info) error {
+func (s seasonService) CreateStandings(info core.Info) error {
 	id, leagueID, err := s.getLeagueSeason(info)
 	if err != nil {
 		return err
@@ -38,7 +39,7 @@ func (s seasonService) CreateStandings(info Info) error {
 	return nil
 }
 
-func (s seasonService) getLeagueSeason(info Info) (uint, uint, error) {
+func (s seasonService) getLeagueSeason(info core.Info) (uint, uint, error) {
 	var wg sync.WaitGroup
 	leagueChan := make(chan uint)
 	seasonChan := make(chan uint)
@@ -66,7 +67,7 @@ func (s seasonService) getLeagueSeason(info Info) (uint, uint, error) {
 	return leagueSeasonID, leagueID, nil
 }
 
-func (s seasonService) getLeague(wg *sync.WaitGroup, info Info, leagueChan chan<- uint, errChan chan<- error) {
+func (s seasonService) getLeague(wg *sync.WaitGroup, info core.Info, leagueChan chan<- uint, errChan chan<- error) {
 	defer wg.Done()
 	id, err := s.repo.GetLeague(info.League)
 	if err != nil {
@@ -81,7 +82,7 @@ func (s seasonService) getLeague(wg *sync.WaitGroup, info Info, leagueChan chan<
 	leagueChan <- id
 }
 
-func (s seasonService) createLeague(info Info) (uint, error) {
+func (s seasonService) createLeague(info core.Info) (uint, error) {
 	leagueInfo, err := s.api.GetLeague(info.League, info.Season)
 	if err != nil {
 		return 0, err
@@ -102,7 +103,7 @@ func (s seasonService) createLeague(info Info) (uint, error) {
 	return id, nil
 }
 
-func (s seasonService) getSeason(wg *sync.WaitGroup, info Info, seasonChan chan<- uint, errChan chan<- error) {
+func (s seasonService) getSeason(wg *sync.WaitGroup, info core.Info, seasonChan chan<- uint, errChan chan<- error) {
 	defer wg.Done()
 	id, err := s.repo.GetSeason(info.Season)
 	if err != nil {
@@ -117,7 +118,7 @@ func (s seasonService) getSeason(wg *sync.WaitGroup, info Info, seasonChan chan<
 	seasonChan <- id
 }
 
-func (s seasonService) createSeason(info Info) (uint, error) {
+func (s seasonService) createSeason(info core.Info) (uint, error) {
 	leagueInfo, err := s.api.GetLeague(info.League, info.Season)
 	if err != nil {
 		return 0, err
@@ -146,7 +147,7 @@ func (s seasonService) createSeason(info Info) (uint, error) {
 	return id, nil
 }
 
-func (s seasonService) createStandings(leagueSeasonID uint, info Info, leagueID uint) error {
+func (s seasonService) createStandings(leagueSeasonID uint, info core.Info, leagueID uint) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error)
 	reserve := make(chan struct{}, 5)
@@ -158,7 +159,7 @@ func (s seasonService) createStandings(leagueSeasonID uint, info Info, leagueID 
 
 	for i, v := range standingsInfo.Response[0].League.Standings[0] {
 		wg.Add(1)
-		go func(i int, v Standing) {
+		go func(i int, v core.Standing) {
 			defer wg.Done()
 			reserve <- struct{}{}
 			defer func() { <-reserve }()
@@ -176,7 +177,7 @@ func (s seasonService) createStandings(leagueSeasonID uint, info Info, leagueID 
 	return nil
 }
 
-func (s seasonService) firstOrCreateTeam(name string, teamApi uint, info Info, leagueID uint) (uint, error) {
+func (s seasonService) firstOrCreateTeam(name string, teamApi uint, info core.Info, leagueID uint) (uint, error) {
 	teamID, err := s.repo.FindTeam(name)
 	if err != nil {
 		return 0, err
@@ -219,7 +220,7 @@ func (s seasonService) createStanding(teamID uint, rank uint, leagueSeasonID uin
 	return nil
 }
 
-func (s seasonService) CreatePlayers(info Info) error {
+func (s seasonService) CreatePlayers(info core.Info) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, 5)
 	reserve := make(chan struct{}, 4)
@@ -260,7 +261,7 @@ func (s seasonService) CreatePlayers(info Info) error {
 	return nil
 }
 
-func (s seasonService) createPlayerAndPlayerStatistics(players Players) error {
+func (s seasonService) createPlayerAndPlayerStatistics(players core.Players) error {
 	for _, v := range players.Response {
 		TeamID, err := s.repo.FindTeam(v.Statistics[0].Team.Name)
 		if err != nil {
@@ -307,7 +308,7 @@ func (s seasonService) createPlayerAndPlayerStatistics(players Players) error {
 	return nil
 }
 
-func (s seasonService) CreateMatch(info Info) error {
+func (s seasonService) CreateMatch(info core.Info) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, 4)
 	reserve := make(chan struct{}, 4)

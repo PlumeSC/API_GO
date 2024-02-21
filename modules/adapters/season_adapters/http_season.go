@@ -1,6 +1,7 @@
 package seasonadapters
 
 import (
+	core "false_api/modules/core"
 	seasoncore "false_api/modules/core/season_core"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +16,7 @@ func NewSeasonHandler(service seasoncore.SeasonService) *seasonHandler {
 }
 
 func (h *seasonHandler) CreateStandings(c *fiber.Ctx) error {
-	info := seasoncore.Info{}
+	info := core.Info{}
 	if err := c.BodyParser(&info); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
@@ -28,7 +29,7 @@ func (h *seasonHandler) CreateStandings(c *fiber.Ctx) error {
 	})
 }
 func (h *seasonHandler) CreatePlayers(c *fiber.Ctx) error {
-	info := seasoncore.Info{}
+	info := core.Info{}
 	if err := c.BodyParser(&info); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
@@ -41,7 +42,7 @@ func (h *seasonHandler) CreatePlayers(c *fiber.Ctx) error {
 	})
 }
 func (h *seasonHandler) CreateMatch(c *fiber.Ctx) error {
-	info := seasoncore.Info{}
+	info := core.Info{}
 	if err := c.BodyParser(&info); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}

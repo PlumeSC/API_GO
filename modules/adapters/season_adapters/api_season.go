@@ -2,7 +2,7 @@ package seasonadapters
 
 import (
 	"encoding/json"
-	seasoncore "false_api/modules/core/season_core"
+	core "false_api/modules/core"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,7 +15,7 @@ func NewApiFootball() *apiFootball {
 	return &apiFootball{}
 }
 
-func (r apiFootball) GetLeague(leagueApi uint, season uint) (*seasoncore.League, error) {
+func (r apiFootball) GetLeague(leagueApi uint, season uint) (*core.League, error) {
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/leagues?id=%v&season=%v", leagueApi, season)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -41,7 +41,7 @@ func (r apiFootball) GetLeague(leagueApi uint, season uint) (*seasoncore.League,
 		return nil, err
 	}
 
-	var leagueInfo seasoncore.League
+	var leagueInfo core.League
 	err = json.Unmarshal(body, &leagueInfo)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (r apiFootball) GetLeague(leagueApi uint, season uint) (*seasoncore.League,
 	return &leagueInfo, nil
 }
 
-func (r apiFootball) GetStandings(league uint, season uint) (*seasoncore.Standings, error) {
+func (r apiFootball) GetStandings(league uint, season uint) (*core.Standings, error) {
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/standings?season=%v&league=%v", season, league)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -74,7 +74,7 @@ func (r apiFootball) GetStandings(league uint, season uint) (*seasoncore.Standin
 	if err != nil {
 		return nil, err
 	}
-	var standingsInfo seasoncore.Standings
+	var standingsInfo core.Standings
 	err = json.Unmarshal(body, &standingsInfo)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (r apiFootball) GetStandings(league uint, season uint) (*seasoncore.Standin
 	return &standingsInfo, nil
 }
 
-func (r apiFootball) GetTeam(codeTeam uint, codeLeague uint, season uint) (*seasoncore.Team, error) {
+func (r apiFootball) GetTeam(codeTeam uint, codeLeague uint, season uint) (*core.Team, error) {
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/teams?id=%v&league=%v&season=%v", codeTeam, codeLeague, season)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func (r apiFootball) GetTeam(codeTeam uint, codeLeague uint, season uint) (*seas
 	if err != nil {
 		return nil, err
 	}
-	var teamInfo seasoncore.Team
+	var teamInfo core.Team
 	err = json.Unmarshal(body, &teamInfo)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (r apiFootball) GetTeam(codeTeam uint, codeLeague uint, season uint) (*seas
 	return &teamInfo, nil
 }
 
-func (r apiFootball) GetPlayer(league uint, season uint, page int) (*seasoncore.Players, error) {
+func (r apiFootball) GetPlayer(league uint, season uint, page int) (*core.Players, error) {
 
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/players?league=%v&season=%v&page=%v", league, season, page)
 	req, err := http.NewRequest("GET", url, nil)
@@ -139,7 +139,7 @@ func (r apiFootball) GetPlayer(league uint, season uint, page int) (*seasoncore.
 	if err != nil {
 		return nil, err
 	}
-	var playerInfo seasoncore.Players
+	var playerInfo core.Players
 	err = json.Unmarshal(body, &playerInfo)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (r apiFootball) GetPlayer(league uint, season uint, page int) (*seasoncore.
 	return &playerInfo, nil
 }
 
-func (r apiFootball) GetFixture(league uint, season uint, round int) (*seasoncore.Match, error) {
+func (r apiFootball) GetFixture(league uint, season uint, round int) (*core.Match, error) {
 	x := "%20"
 	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/fixtures?league=%v&season=%v&round=Regular%vSeason%v-%v%v", league, season, x, x, x, round)
 
@@ -173,7 +173,7 @@ func (r apiFootball) GetFixture(league uint, season uint, round int) (*seasoncor
 	if err != nil {
 		return nil, err
 	}
-	var match seasoncore.Match
+	var match core.Match
 	err = json.Unmarshal(body, &match)
 	if err != nil {
 		return nil, err
