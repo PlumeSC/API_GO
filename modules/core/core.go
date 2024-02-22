@@ -1,4 +1,4 @@
-package seasoncore
+package core
 
 import "time"
 
