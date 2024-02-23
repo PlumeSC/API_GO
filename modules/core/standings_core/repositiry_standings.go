@@ -7,5 +7,5 @@ type StandingsRepository interface {
 	FindTeam(name string) (uint, error)
 	FindLeagueSeason(league uint, season uint) (uint, error)
 	// UpdateStandings(models.Standing) error
-	UpdateStandings(models.Standing, string, uint) error
+	UpdateStandings(models.Standing, uint, uint) error
 }

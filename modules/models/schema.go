@@ -88,7 +88,7 @@ type (
 		Lost           uint `gorm:"default:0"`
 		GF             uint `gorm:"default:0"`
 		GA             uint `gorm:"default:0"`
-		GD             uint `gorm:"default:0"`
+		GD             int  `gorm:"default:0"`
 		Points         uint `gorm:"default:0"`
 		Form           string
 		LeagueSeasonID uint

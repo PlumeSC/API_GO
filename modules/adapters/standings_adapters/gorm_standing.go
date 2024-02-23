@@ -16,23 +16,40 @@ func NewstandingsRepository(db *gorm.DB) *standingsRepository {
 }
 
 func (r standingsRepository) GetStandings(apiCode uint, season uint) (*[]models.Standing, error) {
-	var standings []models.Standing
-
-	result := r.db.Joins("JOIN league_seasons ON league_seasons.league_id = leagues.id").
-		Joins("JOIN seasons ON league_seasons.season_id = seasons.id").
-		Joins("JOIN standings ON standings.league_season_id = league_seasons.id").
-		Where("leagues.api_code = ? AND league_seasons.season = ?", apiCode, season).
-		Find(&standings)
+	var standing []models.Standing
+	var leagueSeason models.LeagueSeason
+	if err := r.db.Preload("Season").Preload("League").
+		First(&leagueSeason); err.Error != nil {
+		return nil, err.Error
+	}
+	result := r.db.Preload("Team").Preload("LeagueSeason").
+		Preload("LeagueSeason.Season").Preload("LeagueSeason.League").
+		Where("league_season_id=?", leagueSeason.ID).
+		Order("rank").Find(&standing)
 
 	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("league or season NotFound")
-		} else {
-			return nil, result.Error
-		}
+		return nil, result.Error
 	}
-	return &standings, nil
+
+	return &standing, nil
 }
+
+// func (r standingsRepository) GetStandings(apiCode uint, season uint) (*[]models.Standing, error) {
+// 	var standings []models.Standing
+// 	result := r.db.Joins("JOIN league_seasons ON league_seasons.league_id = leagues.id").
+// 		Joins("JOIN seasons ON league_seasons.season_id = seasons.id").
+// 		Joins("JOIN standings ON standings.league_season_id = league_seasons.id").
+// 		Where("leagues.api_code = ? AND league_seasons.season = ?", apiCode, season).
+// 		Find(&standings)
+// 	if result.Error != nil {
+// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+// 			return nil, errors.New("league or season NotFound")
+// 		} else {
+// 			return nil, result.Error
+// 		}
+// 	}
+// 	return &standings, nil
+// }
 
 func (r standingsRepository) FindTeam(name string) (uint, error) {
 	team := models.Team{}
@@ -47,19 +64,22 @@ func (r standingsRepository) FindTeam(name string) (uint, error) {
 }
 
 func (r standingsRepository) FindLeagueSeason(league uint, season uint) (uint, error) {
-	leagueSeason := models.LeagueSeason{}
-	err := r.db.Where("season_id = ? AND league_id = ?", season, league).First(&leagueSeason).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return 0, nil
-	}
-	if err != nil {
-		return 0, err
+	var leagueSeason models.LeagueSeason
+	result := r.db.Joins("JOIN leagues ON leagues.id = league_seasons.league_id").
+		Joins("JOIN seasons ON seasons.id = league_seasons.season_id").
+		Where("seasons.season = ? AND leagues.api_code = ?", season, league).
+		Select("league_seasons.id").
+		First(&leagueSeason).Error
+	if result != nil {
+		return 0, result
 	}
 	return leagueSeason.ID, nil
 }
 
-func (r standingsRepository) UpdateStandings(standing models.Standing, teamName string, leagueSeasonID uint) error {
-	result := r.db.Model(&models.Standing{}).Where("team_id = (SELECT id FROM teams WHERE name = ?) AND league_season_id = ?", teamName, leagueSeasonID).
+func (r standingsRepository) UpdateStandings(standing models.Standing, teamID uint, leagueSeasonID uint) error {
+
+	result := r.db.Model(&models.Standing{}).
+		Where("team_id = ? AND league_season_id = ?", teamID, leagueSeasonID).
 		Updates(&standing)
 	if result.Error != nil {
 		return result.Error

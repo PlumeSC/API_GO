@@ -3,26 +3,29 @@ package modules
 import (
 	"false_api/modules/models"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func Init() (*fiber.App, *gorm.DB) {
 	if err := godotenv.Load(); err != nil {
 		panic("error .env")
 	}
-	// newLogger := logger.New(
-	// 	log.New(os.Stdout, "\r\n", log.LstdFlags),
-	// 	logger.Config{
-	// 		SlowThreshold: time.Second,
-	// 		LogLevel:      logger.Info,
-	// 		Colorful:      true,
-	// 	},
-	// )
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Info,
+			Colorful:      true,
+		},
+	)
 
 	app := fiber.New()
 	dsn := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
@@ -34,7 +37,7 @@ func Init() (*fiber.App, *gorm.DB) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		// Logger: newLogger
+		Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect database")
