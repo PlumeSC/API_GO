@@ -1,10 +1,9 @@
 package seasoncore
 
 import (
-	"errors"
 	core "false_api/modules/core"
 	"false_api/modules/models"
-	"strconv"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -64,6 +63,7 @@ func (s seasonService) getLeagueSeason(info core.Info) (uint, uint, error) {
 	if err != nil {
 		return 0, 0, err
 	}
+
 	return leagueSeasonID, leagueID, nil
 }
 
@@ -99,7 +99,6 @@ func (s seasonService) createLeague(info core.Info) (uint, error) {
 	if err != nil {
 		return 0, nil
 	}
-
 	return id, nil
 }
 
@@ -222,42 +221,47 @@ func (s seasonService) createStanding(teamID uint, rank uint, leagueSeasonID uin
 
 func (s seasonService) CreatePlayers(info core.Info) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, 5)
-	reserve := make(chan struct{}, 4)
+	var mu sync.Mutex
+	errChan := make(chan error, 4)
+	reserve := make(chan struct{}, 2)
 	totalPages := 1
-
-	go func() {
-		for currentPages := 1; currentPages <= totalPages; currentPages++ {
+	func() {
+		for currentPages := 1; ; currentPages++ {
 			wg.Add(1)
 			go func(page int) {
 				defer wg.Done()
 				reserve <- struct{}{}
 				defer func() { <-reserve }()
-
+				mu.Lock()
 				players, err := s.api.GetPlayer(info.League, info.Season, page)
+				mu.Unlock()
+
 				if err != nil {
 					errChan <- err
+					return
 				}
-
 				if page == 1 && totalPages == 1 {
 					totalPages = players.Paging.Total
 				}
 				err = s.createPlayerAndPlayerStatistics(*players)
 				if err != nil {
 					errChan <- err
+					return
 				}
-
+				if page == totalPages {
+					return
+				}
 			}(currentPages)
 		}
-	}()
-	go func() {
-		wg.Wait()
-		close(reserve)
-		close(errChan)
 	}()
 	for err := range errChan {
 		return err
 	}
+
+	wg.Wait()
+	close(errChan)
+	close(reserve)
+
 	return nil
 }
 
@@ -267,38 +271,31 @@ func (s seasonService) createPlayerAndPlayerStatistics(players core.Players) err
 		if err != nil {
 			return err
 		}
-		height, err := strconv.Atoi(v.Player.Height)
-		if err != nil {
-			return err
-		}
-		weight, err := strconv.Atoi(v.Player.Weight)
-		if err != nil {
-			return err
-		}
 		player := models.Player{
 			Name:        v.Player.Name,
 			Firstname:   v.Player.Firstname,
 			Lastname:    v.Player.Lastname,
 			Age:         uint(v.Player.Age),
 			Nationality: v.Player.Nationality,
-			Height:      uint(height),
-			Weight:      uint(weight),
+			Height:      v.Player.Height,
+			Weight:      v.Player.Weight,
 			Injuries:    v.Player.Injured,
 			Photo:       v.Player.Photo,
 			TeamID:      TeamID,
 		}
+
+		var number uint
+		number, _ = v.Statistics[0].Games.Number.(uint)
+
 		playerID, err := s.repo.FindOrCreatePlayer(player)
 		if err != nil {
 			return err
 		}
-		number, ok := v.Statistics[0].Games.Number.(float64)
-		if !ok {
-			return errors.New("expected type float64")
-		}
+
 		static := models.PlayerStatistics{
 			PlayerID: playerID,
-			Number:   uint(number),
 			Position: v.Statistics[0].Games.Position,
+			Number:   number,
 		}
 		err = s.repo.CreateStatistic(static)
 		if err != nil {
@@ -311,7 +308,7 @@ func (s seasonService) createPlayerAndPlayerStatistics(players core.Players) err
 func (s seasonService) CreateMatch(info core.Info) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, 4)
-	reserve := make(chan struct{}, 4)
+	reserve := make(chan struct{}, 2)
 
 	leagueSeasonID, _, err := s.getLeagueSeason(info)
 	if err != nil {
@@ -328,7 +325,7 @@ func (s seasonService) CreateMatch(info core.Info) error {
 			defer wg.Done()
 			reserve <- struct{}{}
 			defer func() { <-reserve }()
-
+			fmt.Println("match = ", i)
 			matchs, err := s.api.GetFixture(info.League, info.Season, i)
 			if err != nil {
 				errChan <- err

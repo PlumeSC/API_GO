@@ -40,8 +40,8 @@ type (
 		Lastname    string
 		Age         uint
 		Nationality string
-		Height      uint
-		Weight      uint
+		Height      string
+		Weight      string
 		Injuries    bool
 		Photo       string
 		TeamID      uint
@@ -110,8 +110,7 @@ type (
 		AwayTeam       Team `gorm:"foreignKey:away_team_id"`
 		LeagueSeasonID uint
 		LeagueSeason   LeagueSeason `gorm:"foreignKey:league_season_id"`
-		EventID        uint
-		Event          Team `gorm:"foreignKey:event_id"`
+		Event          []Event      `gorm:"foreignKey:MatchID"`
 	}
 	Event struct {
 		gorm.Model
@@ -120,6 +119,8 @@ type (
 		Event     string
 		PlayerID  uint
 		Player    Player `gorm:"foreignKey:player_id"`
+		MatchID   uint
+		Match     Match `gorm:"foreignKey:MatchID"`
 	}
 
 	Videos struct {

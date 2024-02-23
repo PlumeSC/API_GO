@@ -28,6 +28,5 @@ func main() {
 	app.Post("/createplayer", seasonHandler.CreatePlayers)   // league season
 	app.Post("/creatematch", seasonHandler.CreateMatch)      // league season
 
-
 	app.Listen(os.Getenv("URL"))
 }

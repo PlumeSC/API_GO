@@ -19,7 +19,7 @@ func NewAuthRepository(db *gorm.DB) *authRepositoryImpl {
 func (r *authRepositoryImpl) WhereTeamID(team string) (uint, error) {
 	teamID := models.Team{}
 	if err := r.db.Where("name = ?", team).First(&teamID).Error; err != nil {
-		return 0, err
+		return 0, errors.New("not found teamID")
 	}
 	return teamID.ID, nil
 }

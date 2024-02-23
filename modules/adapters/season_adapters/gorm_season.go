@@ -47,7 +47,8 @@ func (r seasonRepository) CreateLeague(leagueInfo models.League) (uint, error) {
 }
 
 func (r seasonRepository) CreateSeason(seasonInfo models.Season) (uint, error) {
-	if err := r.db.Create(seasonInfo).Error; err != nil {
+
+	if err := r.db.Create(&seasonInfo).Error; err != nil {
 		return 0, err
 	}
 	return seasonInfo.ID, nil
@@ -91,11 +92,12 @@ func (r seasonRepository) FindOrCreatePlayer(player models.Player) (uint, error)
 	if err := r.db.Where("name = ?", player.Name).FirstOrCreate(&player).Error; err != nil {
 		return 0, err
 	}
+
 	return player.ID, nil
 }
 
 func (r seasonRepository) CreateStatistic(static models.PlayerStatistics) error {
-	if err := r.db.Where("player_id = ?", static.PlayerID).Error; err != nil {
+	if err := r.db.Create(&static).Error; err != nil {
 		return err
 	}
 	return nil

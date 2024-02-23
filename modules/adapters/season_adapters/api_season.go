@@ -121,7 +121,6 @@ func (r apiFootball) GetPlayer(league uint, season uint, page int) (*core.Player
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Add("X-RapidAPI-Key", os.Getenv("API_FOOTBALL"))
 	req.Header.Add("X-RapidAPI-Host", os.Getenv("API_HOST"))
 
@@ -139,6 +138,7 @@ func (r apiFootball) GetPlayer(league uint, season uint, page int) (*core.Player
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(page)
 	var playerInfo core.Players
 	err = json.Unmarshal(body, &playerInfo)
 	if err != nil {
