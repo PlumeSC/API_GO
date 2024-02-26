@@ -8,7 +8,7 @@ import (
 )
 
 type StandingsService interface {
-	GetStandings(core.Info) (*[]models.Standing, error)
+	GetStandings(core.Info) ([]map[string]interface{}, error)
 	UpdateStandings(core.Info) error
 }
 
@@ -24,12 +24,30 @@ func NewStandingsService(repo StandingsRepository, Api seasoncore.SeasonApi) *st
 	}
 }
 
-func (s standingsSerive) GetStandings(info core.Info) (*[]models.Standing, error) {
+func (s standingsSerive) GetStandings(info core.Info) ([]map[string]interface{}, error) {
 	standings, err := s.repo.GetStandings(info.League, info.Season)
 	if err != nil {
 		return nil, err
 	}
-	return standings, nil
+	data := make([]map[string]interface{}, 0)
+	for _, v := range *standings {
+		data = append(data, map[string]interface{}{
+			"Team":     v.Team.Name,
+			"CodeName": v.Team.CodeName,
+			"TeamImg":  v.Team.Logo,
+			"Rank":     v.Rank,
+			"Played":   v.Played,
+			"win":      v.Won,
+			"Draw":     v.Drawn,
+			"Lost":     v.Lost,
+			"GF":       v.GF,
+			"GA":       v.GA,
+			"GD":       v.GD,
+			"Points":   v.Points,
+			"Form":     v.Form,
+		})
+	}
+	return data, nil
 }
 
 func (s standingsSerive) UpdateStandings(info core.Info) error {

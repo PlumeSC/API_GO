@@ -48,10 +48,7 @@ func (h standingsHandler) GetStandings(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	return c.JSON(fiber.Map{
-		"msg":       "ok",
-		"standings": standings,
-	})
+	return c.JSON(standings)
 }
 
 func (h standingsHandler) UpdateStandings(c *fiber.Ctx) error {
