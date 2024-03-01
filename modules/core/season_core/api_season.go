@@ -8,4 +8,5 @@ type SeasonApi interface {
 	GetTeam(uint, uint, uint) (*core.Team, error)
 	GetPlayer(uint, uint, int) (*core.Players, error)
 	GetFixture(uint, uint, int) (*core.Match, error)
+	GetLiveScore(uint, uint) (*core.Match, error)
 }

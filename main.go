@@ -4,10 +4,12 @@ import (
 	"false_api/modules"
 
 	authadapter "false_api/modules/adapters/auth_adapters"
+	competitiveadapters "false_api/modules/adapters/competitive_adapters"
 	matchsadapters "false_api/modules/adapters/matchs_adapters"
 	seasonadapters "false_api/modules/adapters/season_adapters"
 	standingsadapters "false_api/modules/adapters/standings_adapters"
 	authcore "false_api/modules/core/auth_core"
+	competitivecore "false_api/modules/core/competitive_core"
 	matchscore "false_api/modules/core/matchs_core"
 	seasoncore "false_api/modules/core/season_core"
 	standingscore "false_api/modules/core/standings_core"
@@ -32,6 +34,12 @@ func main() {
 	matchsService := matchscore.NewMatchService(matchsRepository, seasonApi)
 	matchsHandler := matchsadapters.NewMatchsHandler(matchsService)
 
+	compRepository := competitiveadapters.NewCompRepository(db)
+	compService := competitivecore.NewCompService(compRepository, seasonApi, matchsRepository)
+	compHandler := competitiveadapters.NewCompHandler(compService)
+
+	compHandler.InitLive()
+
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
 	app.Post("/createseason", seasonHandler.CreateStandings)      // league season
@@ -41,6 +49,7 @@ func main() {
 	app.Get("/updatestandings", standingsHandler.UpdateStandings) // league season
 	app.Get("/getmatches", matchsHandler.GetAll)                  // teamName round? league season
 	app.Get("/updatematches", matchsHandler.UpdateMatch)          // round league season
+	app.Get("/comp", compHandler.GetMatchDay)
 
 	app.Listen(os.Getenv("URL"))
 }

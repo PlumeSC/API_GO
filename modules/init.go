@@ -26,6 +26,7 @@ func Init() (*fiber.App, *gorm.DB) {
 			Colorful:      true,
 		},
 	)
+	_ = newLogger
 
 	app := fiber.New()
 	dsn := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
@@ -37,7 +38,7 @@ func Init() (*fiber.App, *gorm.DB) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+		// Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect database")

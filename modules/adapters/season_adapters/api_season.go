@@ -181,3 +181,37 @@ func (r apiFootball) GetFixture(league uint, season uint, round int) (*core.Matc
 
 	return &match, nil
 }
+
+func (r apiFootball) GetLiveScore(league uint, season uint) (*core.Match, error) {
+	url := fmt.Sprintf("https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all&league=%v&season=%v", league, season)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("X-RapidAPI-Key", os.Getenv("API_FOOTBALL"))
+	req.Header.Add("X-RapidAPI-Host", os.Getenv("API_HOST"))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %v", res.StatusCode)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	var match core.Match
+	err = json.Unmarshal(body, &match)
+	if err != nil {
+		return nil, err
+	}
+
+	return &match, nil
+}
