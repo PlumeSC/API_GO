@@ -38,7 +38,7 @@ func Init() (*fiber.App, *gorm.DB) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		// Logger: newLogger,
+		Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect database")

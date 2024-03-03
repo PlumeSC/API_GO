@@ -40,11 +40,23 @@ func NewCompService(repo CompRepository, api seasoncore.SeasonApi, repoMatches m
 }
 
 func (s compService) Comp(info core.Info) error {
-	isCron := cron.New()
-	err := isCron.AddFunc("0 0 7 * * *", s.newDay)
+	loc, err := time.LoadLocation("Asia/Bangkok")
+	if err != nil {
+		panic(err)
+	}
+
+	isCron := cron.NewWithLocation(loc)
+	err = isCron.AddFunc("0 0 0 * * *", s.newDay)
 	if err != nil {
 		return err
 	}
+
+	data, err := s.getData()
+	if err != nil {
+		fmt.Println(err)
+	}
+	s.Live(data)
+
 	return nil
 }
 
@@ -76,21 +88,28 @@ func (s compService) getData() ([]LiveData, error) {
 }
 
 func (s compService) Live(data []LiveData) {
-	cron := cron.New()
-
+	loc, err := time.LoadLocation("Asia/Bangkok")
+	if err != nil {
+		panic(err)
+	}
+	cron := cron.NewWithLocation(loc)
+	fmt.Println("open")
 	matches := []time.Time{}
 	for _, v := range data {
 		matches = append(matches, v.MatchDay)
 	}
-
+	fmt.Println(matches)
 	for _, v := range matches {
 		matchesHour := v.Hour()
 		matchesMinute := v.Minute()
 
 		convertCron := s.convertTimeTocron(v)
+		fmt.Println(convertCron)
 
 		cron.AddFunc(convertCron, func() {
+			fmt.Println("live1")
 			go func(hour int, minute int) {
+				fmt.Println("live2")
 				currentTime := time.Now()
 				currentTimeHour := currentTime.Hour()
 				currentTimeMinute := currentTime.Minute()
@@ -153,6 +172,7 @@ func (s compService) liveScore(league uint, season uint, lsID uint) string {
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Println("update")
 	}
 	return "ok"
 }

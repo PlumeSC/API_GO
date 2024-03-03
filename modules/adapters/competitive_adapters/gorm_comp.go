@@ -18,10 +18,10 @@ func NewCompRepository(db *gorm.DB) *compRepository {
 func (r compRepository) GetAllToday() ([]models.Match, error) {
 	var matches []models.Match
 
-	location, _ := time.LoadLocation("UTC")
-	today := time.Date(2024, time.March, 2, 0, 0, 0, 0, location)
+	// location, _ := time.LoadLocation("UTC")
+	// today := time.Date(2024, time.March, 2, 0, 0, 0, 0, location)
 
-	// today := time.Now()
+	today := time.Now()
 	err := r.db.Preload("LeagueSeason.League").Preload("LeagueSeason.Season").Where("date(match_day) = ?", today.Format("2006-01-02")).Find(&matches).Error
 	if err != nil {
 		return nil, err
