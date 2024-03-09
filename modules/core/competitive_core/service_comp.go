@@ -46,16 +46,12 @@ func (s compService) Comp(info core.Info) error {
 	}
 
 	isCron := cron.NewWithLocation(loc)
-	err = isCron.AddFunc("0 0 0 * * *", s.newDay)
+	err = isCron.AddFunc("@midnight", s.newDay)
 	if err != nil {
 		return err
 	}
 
-	data, err := s.getData()
-	if err != nil {
-		fmt.Println(err)
-	}
-	s.Live(data)
+	s.newDay()
 
 	return nil
 }
@@ -93,10 +89,14 @@ func (s compService) Live(data []LiveData) {
 		panic(err)
 	}
 	cron := cron.NewWithLocation(loc)
-	fmt.Println("open")
-	matches := []time.Time{}
+	match := map[time.Time]bool{}
+	var matches []time.Time
+
 	for _, v := range data {
-		matches = append(matches, v.MatchDay)
+		if _, ok := match[v.MatchDay]; !ok {
+			match[v.MatchDay] = true
+			matches = append(matches, v.MatchDay)
+		}
 	}
 	fmt.Println(matches)
 	for _, v := range matches {
@@ -105,11 +105,9 @@ func (s compService) Live(data []LiveData) {
 
 		convertCron := s.convertTimeTocron(v)
 		fmt.Println(convertCron)
-
-		cron.AddFunc(convertCron, func() {
-			fmt.Println("live1")
+		// convertCron = "0 43 19 * * *"
+		err := cron.AddFunc(convertCron, func() {
 			go func(hour int, minute int) {
-				fmt.Println("live2")
 				currentTime := time.Now()
 				currentTimeHour := currentTime.Hour()
 				currentTimeMinute := currentTime.Minute()
@@ -125,12 +123,15 @@ func (s compService) Live(data []LiveData) {
 				}
 			}(matchesHour, matchesMinute)
 		})
+		cron.Start()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
 func (s compService) convertTimeTocron(time time.Time) string {
-	cron := fmt.Sprintf("%d %d %d %d * %d", time.Minute(), time.Hour(), time.Day(), time.Month(), time.Year())
-	return cron
+	return fmt.Sprintf("0 %d %d %d %d *", time.Minute(), time.Hour(), time.Day(), time.Month())
 }
 
 func (s compService) liveScore(league uint, season uint, lsID uint) string {
@@ -138,8 +139,7 @@ func (s compService) liveScore(league uint, season uint, lsID uint) string {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	if matches.Response[0].Fixture.Status.Short == "FT" {
+	if matches.Response[0].Fixture.Status.Short == "FT" || matches.Response[0].Fixture.Status.Short == "90" {
 		return "FT"
 	}
 	for _, v := range matches.Response {
