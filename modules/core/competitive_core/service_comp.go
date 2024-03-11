@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 )
 
 type LiveData struct {
@@ -40,19 +40,23 @@ func NewCompService(repo CompRepository, api seasoncore.SeasonApi, repoMatches m
 }
 
 func (s compService) Comp(info core.Info) error {
+
 	loc, err := time.LoadLocation("Asia/Bangkok")
 	if err != nil {
 		panic(err)
 	}
 
-	isCron := cron.NewWithLocation(loc)
-	err = isCron.AddFunc("@midnight", s.newDay)
+	isCron := cron.New(cron.WithLocation(loc))
+
+	isCron.Start()
+	go func() {
+		s.newDay()
+	}()
+
+	_, err = isCron.AddFunc("@daily", s.newDay)
 	if err != nil {
 		return err
 	}
-
-	s.newDay()
-
 	return nil
 }
 
@@ -88,7 +92,7 @@ func (s compService) Live(data []LiveData) {
 	if err != nil {
 		panic(err)
 	}
-	cron := cron.NewWithLocation(loc)
+	cron := cron.New(cron.WithLocation(loc))
 	match := map[time.Time]bool{}
 	var matches []time.Time
 
@@ -98,15 +102,18 @@ func (s compService) Live(data []LiveData) {
 			matches = append(matches, v.MatchDay)
 		}
 	}
-	fmt.Println(matches)
 	for _, v := range matches {
 		matchesHour := v.Hour()
 		matchesMinute := v.Minute()
 
 		convertCron := s.convertTimeTocron(v)
+		_ = convertCron
+		fmt.Println(time.Now())
+		convertCron = "0 20 3 12 3"
 		fmt.Println(convertCron)
-		// convertCron = "0 43 19 * * *"
-		err := cron.AddFunc(convertCron, func() {
+
+		_, err := cron.AddFunc(convertCron, func() {
+			fmt.Println("xx")
 			go func(hour int, minute int) {
 				currentTime := time.Now()
 				currentTimeHour := currentTime.Hour()
@@ -115,7 +122,7 @@ func (s compService) Live(data []LiveData) {
 				if currentTimeHour == hour && currentTimeMinute == minute {
 					for {
 						status := s.liveScore(data[0].League, data[0].Season, data[0].LeagueSeasonID)
-						if status == "FT" {
+						if !status {
 							return
 						}
 						time.Sleep(1 * time.Minute)
@@ -131,17 +138,15 @@ func (s compService) Live(data []LiveData) {
 }
 
 func (s compService) convertTimeTocron(time time.Time) string {
-	return fmt.Sprintf("0 %d %d %d %d *", time.Minute(), time.Hour(), time.Day(), time.Month())
+	return fmt.Sprintf("0 %d %d %d %d ", time.Minute(), time.Hour(), time.Day(), time.Month())
 }
 
-func (s compService) liveScore(league uint, season uint, lsID uint) string {
+func (s compService) liveScore(league uint, season uint, lsID uint) bool {
 	matches, err := s.api.GetLiveScore(league, season)
 	if err != nil {
 		fmt.Println(err)
 	}
-	if matches.Response[0].Fixture.Status.Short == "FT" || matches.Response[0].Fixture.Status.Short == "90" {
-		return "FT"
-	}
+
 	for _, v := range matches.Response {
 		matchTime := strconv.Itoa(v.Fixture.Status.Elapsed)
 		homeID, err := s.repoMatches.FindTeam(v.Teams.Home.Name)
@@ -172,7 +177,9 @@ func (s compService) liveScore(league uint, season uint, lsID uint) string {
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("update")
+		if v.Fixture.Status.Long == "Match Finished" {
+			return false
+		}
 	}
-	return "ok"
+	return true
 }
