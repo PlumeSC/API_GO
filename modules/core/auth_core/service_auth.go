@@ -111,6 +111,11 @@ func (s *authServiceImpl) createToken(user models.User) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = user.ID
+	if user.IsAdmin {
+		claims["role"] = "Admin"
+	} else {
+		claims["role"] = "User"
+	}
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	t, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))

@@ -41,7 +41,7 @@ func (r matchsRepository) GetAll(params map[string]interface{}) ([]models.Match,
 	}
 
 	if roundValue, ok := params["round"]; ok {
-		if round, ok := roundValue.(int); ok {
+		if round, ok := roundValue.(uint); ok {
 			if round != 0 {
 				query = query.Where("matches.rounded = ?", round)
 			}
@@ -126,4 +126,14 @@ func (r matchsRepository) UpdateMatch(match models.Match, homeID uint, awayID ui
 		return err
 	}
 	return nil
+}
+
+func (r matchsRepository) GetPlayer(name string) (*models.PlayerStatistics, error) {
+	player := models.PlayerStatistics{}
+	err := r.db.Preload("Player").Joins("FULL OUTER JOIN players on player_statistics.player_id = players.id").Where("players.name = ?", name).First(&player).Error
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(player)
+	return &player, nil
 }

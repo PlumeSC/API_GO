@@ -21,12 +21,20 @@ func (h matchsHandler) GetAll(c *fiber.Ctx) error {
 	roundParam := c.Query("round")
 	api_codeParam := c.Query("api_code")
 	seasonParam := c.Query("season")
-
-	runes := []rune(teamNameParam)
-	trimmedStr := string(runes[1 : len(runes)-1])
-
-	round, _ := strconv.Atoi(roundParam)
-
+	var trimmedStr string
+	if teamNameParam != "" {
+		runes := []rune(teamNameParam)
+		trimmedStr = string(runes[1 : len(runes)-1])
+	}
+	var round int
+	var err error
+	if roundParam != "" {
+		round, err = strconv.Atoi(roundParam)
+		if err != nil {
+			fmt.Println("round", err)
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+	}
 	season, err := strconv.Atoi(seasonParam)
 	if err != nil {
 		fmt.Println("season")
@@ -82,4 +90,14 @@ func (h matchsHandler) UpdateMatch(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"msg": "ok",
 	})
+}
+
+func (h matchsHandler) GetPlayer(c *fiber.Ctx) error {
+	name := c.Query("playername")
+	player, err := h.service.GetPlayer(name)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+	return c.JSON(player)
+
 }

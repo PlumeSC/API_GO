@@ -5,7 +5,6 @@ import "time"
 type Info struct {
 	League uint `json:"league"`
 	Season uint `json:"season"`
-	Round  uint `json:"round"`
 }
 
 type League struct {

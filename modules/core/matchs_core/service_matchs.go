@@ -10,6 +10,7 @@ import (
 type MatchsService interface {
 	GetMatchs(params map[string]interface{}) ([]map[string]interface{}, error)
 	UpdateMatchs(params map[string]int) error
+	GetPlayer(name string) (*models.PlayerStatistics, error)
 }
 
 type matchsService struct {
@@ -92,4 +93,12 @@ func (s matchsService) UpdateMatchs(params map[string]int) error {
 		}
 	}
 	return err
+}
+
+func (s matchsService) GetPlayer(name string) (*models.PlayerStatistics, error) {
+	player, err := s.repo.GetPlayer(name)
+	if err != nil {
+		return nil, err
+	}
+	return player, nil
 }

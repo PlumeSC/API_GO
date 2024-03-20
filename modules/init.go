@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	jwtware "github.com/gofiber/jwt/v3"
+	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -48,4 +51,32 @@ func Init() (*fiber.App, *gorm.DB) {
 		&models.PlayerStatistics{})
 
 	return app, db
+}
+
+func Middleware(secret string) fiber.Handler {
+	return jwtware.New(jwtware.Config{
+		SigningKey: []byte(secret),
+	})
+}
+
+func Admin(c *fiber.Ctx) error {
+	tokenString := c.Get("Authorization")
+	splitToken := strings.Split(tokenString, "Bearer ")
+	tokenString = splitToken[1]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	role := claims["role"].(string)
+	if role != "Admin" {
+		return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
+	}
+
+	return c.Next()
 }

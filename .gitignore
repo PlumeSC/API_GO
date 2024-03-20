@@ -4,5 +4,3 @@
 *.yml
 *.yaml
 .env
-go.sum
-go.mod

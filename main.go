@@ -17,6 +17,8 @@ import (
 	"os"
 )
 
+var key string = os.Getenv("SECRET_KEY")
+
 func main() {
 	app, db := modules.Init()
 
@@ -35,21 +37,25 @@ func main() {
 	matchsHandler := matchsadapters.NewMatchsHandler(matchsService)
 
 	compRepository := competitiveadapters.NewCompRepository(db)
-	compService := competitivecore.NewCompService(compRepository, seasonApi, matchsRepository)
+	compService := competitivecore.NewCompService(compRepository, seasonApi, matchsRepository, matchsService, standingsService)
 	compHandler := competitiveadapters.NewCompHandler(compService)
 
 	compHandler.InitLive()
 
+	jwt := modules.Middleware(key)
+
 	app.Post("/register", authHandler.Register)
 	app.Post("/Login", authHandler.Login)
-	app.Post("/createseason", seasonHandler.CreateStandings)      // league season
-	app.Post("/createplayer", seasonHandler.CreatePlayers)        // league season
-	app.Post("/creatematch", seasonHandler.CreateMatch)           // league season
+	app.Post("/createseason", jwt, modules.Admin, seasonHandler.CreateStandings) // league season
+	app.Post("/createplayer", jwt, modules.Admin, seasonHandler.CreatePlayers)   // league season
+	app.Post("/creatematch", jwt, modules.Admin, seasonHandler.CreateMatch)      // league season
+
 	app.Get("/getstandings", standingsHandler.GetStandings)       // league season
 	app.Get("/updatestandings", standingsHandler.UpdateStandings) // league season
-	app.Get("/getmatches", matchsHandler.GetAll)                  // teamName round? league season
-	app.Get("/updatematches", matchsHandler.UpdateMatch)          // round league season
+	app.Get("/player", matchsHandler.GetPlayer)
+	app.Get("/getmatches", matchsHandler.GetAll)         // teamName round? league season
+	app.Get("/updatematches", matchsHandler.UpdateMatch) // round league season
 	app.Get("/comp", compHandler.GetMatchDay)
 
-	app.Listen(os.Getenv("URL"))
+	app.Listen(os.Getenv("PORT"))
 }

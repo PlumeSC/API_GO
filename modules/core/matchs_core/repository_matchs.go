@@ -8,4 +8,5 @@ type MatchsRepository interface {
 	FindTeam(name string) (uint, error)
 	FindLeagueSeason(uint, uint) (uint, error)
 	UpdateMatch(models.Match, uint, uint, uint) error
+	GetPlayer(string) (*models.PlayerStatistics, error)
 }
