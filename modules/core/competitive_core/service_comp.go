@@ -23,7 +23,7 @@ type LiveData struct {
 }
 
 type CompService interface {
-	Comp(core.Info) error
+	Comp() error
 }
 
 type compService struct {
@@ -44,7 +44,7 @@ func NewCompService(repo CompRepository, api seasoncore.SeasonApi, repoMatches m
 	}
 }
 
-func (s compService) Comp(info core.Info) error {
+func (s compService) Comp() error {
 	loc, err := time.LoadLocation("Asia/Bangkok")
 	if err != nil {
 		panic(err)
@@ -103,6 +103,7 @@ func (s compService) Live(data []LiveData) {
 			matches = append(matches, v.MatchDay)
 		}
 	}
+	fmt.Println(matches)
 	for _, v := range matches {
 		matchesHour := v.Hour()
 		matchesMinute := v.Minute()

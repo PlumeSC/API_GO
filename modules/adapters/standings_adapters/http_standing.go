@@ -18,16 +18,14 @@ func NewStandingsHandler(service standingscore.StandingsService) *standingsHandl
 
 func (h standingsHandler) GetStandings(c *fiber.Ctx) error {
 	seasonParam := c.Query("season")
-	// fmt.Println("seasonParam:", seasonParam)
-	// if seasonParam == "" {
-	// 	return c.Status(fiber.StatusBadRequest).SendString("Missing 'season' query parameter")
-	// }
+	if seasonParam == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("Missing 'season' query parameter")
+	}
 
 	leagueParam := c.Query("league")
-	// fmt.Println("leagueParam:", leagueParam)
-	// if leagueParam == "" {
-	// 	return c.Status(fiber.StatusBadRequest).SendString("Missing 'league' query parameter")
-	// }
+	if leagueParam == "" {
+		return c.Status(fiber.StatusBadRequest).SendString("Missing 'league' query parameter")
+	}
 
 	season, err := strconv.Atoi(seasonParam)
 	if err != nil {

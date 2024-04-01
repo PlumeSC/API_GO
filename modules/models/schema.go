@@ -45,6 +45,7 @@ type (
 		Injuries    bool
 		Photo       string
 		TeamID      uint
+		Team        Team
 	}
 	PlayerStatistics struct {
 		gorm.Model

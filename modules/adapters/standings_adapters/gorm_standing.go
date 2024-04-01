@@ -34,23 +34,6 @@ func (r standingsRepository) GetStandings(apiCode uint, season uint) (*[]models.
 	return &standing, nil
 }
 
-// func (r standingsRepository) GetStandings(apiCode uint, season uint) (*[]models.Standing, error) {
-// 	var standings []models.Standing
-// 	result := r.db.Joins("JOIN league_seasons ON league_seasons.league_id = leagues.id").
-// 		Joins("JOIN seasons ON league_seasons.season_id = seasons.id").
-// 		Joins("JOIN standings ON standings.league_season_id = league_seasons.id").
-// 		Where("leagues.api_code = ? AND league_seasons.season = ?", apiCode, season).
-// 		Find(&standings)
-// 	if result.Error != nil {
-// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 			return nil, errors.New("league or season NotFound")
-// 		} else {
-// 			return nil, result.Error
-// 		}
-// 	}
-// 	return &standings, nil
-// }
-
 func (r standingsRepository) FindTeam(name string) (uint, error) {
 	team := models.Team{}
 	err := r.db.Where("name = ?", name).First(&team).Error

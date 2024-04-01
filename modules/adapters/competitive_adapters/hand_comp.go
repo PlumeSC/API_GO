@@ -1,7 +1,6 @@
 package competitiveadapters
 
 import (
-	"false_api/modules/core"
 	competitivecore "false_api/modules/core/competitive_core"
 	"fmt"
 
@@ -17,17 +16,15 @@ func NewCompHandler(service competitivecore.CompService) *compHandler {
 }
 
 func (h *compHandler) GetMatchDay(c *fiber.Ctx) error {
-	var info core.Info
-	err := h.service.Comp(info)
+	err := h.service.Comp()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	return c.JSON("ok")
 }
 
-func (h *compHandler) InitLive() {
-	var info core.Info
-	err := h.service.Comp(info)
+func (h *compHandler) Live() {
+	err := h.service.Comp()
 	if err != nil {
 		fmt.Println(err)
 	}

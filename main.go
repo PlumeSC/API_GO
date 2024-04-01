@@ -40,22 +40,21 @@ func main() {
 	compService := competitivecore.NewCompService(compRepository, seasonApi, matchsRepository, matchsService, standingsService)
 	compHandler := competitiveadapters.NewCompHandler(compService)
 
-	compHandler.InitLive()
+	compHandler.Live()
 
 	jwt := modules.Middleware(key)
 
 	app.Post("/register", authHandler.Register)
-	app.Post("/Login", authHandler.Login)
+	app.Post("/login", authHandler.Login)
 	app.Post("/createseason", jwt, modules.Admin, seasonHandler.CreateStandings) // league season
 	app.Post("/createplayer", jwt, modules.Admin, seasonHandler.CreatePlayers)   // league season
 	app.Post("/creatematch", jwt, modules.Admin, seasonHandler.CreateMatch)      // league season
 
-	app.Get("/getstandings", standingsHandler.GetStandings)       // league season
-	app.Get("/updatestandings", standingsHandler.UpdateStandings) // league season
+	app.Get("/standings", standingsHandler.GetStandings)                              // league season
+	app.Put("/updatestandings", jwt, modules.Admin, standingsHandler.UpdateStandings) // league season
 	app.Get("/player", matchsHandler.GetPlayer)
-	app.Get("/getmatches", matchsHandler.GetAll)         // teamName round? league season
-	app.Get("/updatematches", matchsHandler.UpdateMatch) // round league season
-	app.Get("/comp", compHandler.GetMatchDay)
+	app.Get("/matches", matchsHandler.GetAll)                                  // teamName round? league season
+	app.Patch("/updatematches", jwt, modules.Admin, matchsHandler.UpdateMatch) // round league season
 
 	app.Listen(os.Getenv("PORT"))
 }

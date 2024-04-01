@@ -29,15 +29,17 @@ func (r matchsRepository) GetAll(params map[string]interface{}) ([]models.Match,
 		Joins("join leagues as l on ls.league_id = l.id").
 		Joins("join seasons as s on ls.season_id = s.id")
 
-	if teamName, ok := params["team_name"]; ok {
-		query = query.Where("t.name = ? OR t2.name = ?", teamName, teamName)
-	}
 	if apiCode, ok := params["api_code"]; ok {
 		query = query.Where("l.api_code = ?", apiCode)
 	}
 
 	if season, ok := params["season"]; ok {
 		query = query.Where("s.season = ?", season)
+	}
+	if teamName, ok := params["team_name"]; ok {
+		if teamName != "" {
+			query = query.Where("t.name = ? OR t2.name = ?", teamName, teamName)
+		}
 	}
 
 	if roundValue, ok := params["round"]; ok {
@@ -48,7 +50,7 @@ func (r matchsRepository) GetAll(params map[string]interface{}) ([]models.Match,
 		}
 	}
 
-	err := query.Find(&matchs).Error
+	err := query.Order("rounded").Find(&matchs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,7 @@ func (r matchsRepository) UpdateMatch(match models.Match, homeID uint, awayID ui
 
 func (r matchsRepository) GetPlayer(name string) (*models.PlayerStatistics, error) {
 	player := models.PlayerStatistics{}
-	err := r.db.Preload("Player").Joins("FULL OUTER JOIN players on player_statistics.player_id = players.id").Where("players.name = ?", name).First(&player).Error
+	err := r.db.Preload("Player").Preload("Player.Team").Joins("FULL OUTER JOIN players on player_statistics.player_id = players.id").Where("players.name = ?", name).First(&player).Error
 	if err != nil {
 		return nil, err
 	}

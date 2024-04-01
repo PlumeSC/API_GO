@@ -21,11 +21,11 @@ func (h matchsHandler) GetAll(c *fiber.Ctx) error {
 	roundParam := c.Query("round")
 	api_codeParam := c.Query("api_code")
 	seasonParam := c.Query("season")
-	var trimmedStr string
-	if teamNameParam != "" {
-		runes := []rune(teamNameParam)
-		trimmedStr = string(runes[1 : len(runes)-1])
-	}
+	// var trimmedStr string
+	// if teamNameParam != "" {
+	// 	runes := []rune(teamNameParam)
+	// 	trimmedStr = string(runes[1 : len(runes)-1])
+	// }
 	var round int
 	var err error
 	if roundParam != "" {
@@ -47,7 +47,7 @@ func (h matchsHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	params := map[string]interface{}{
-		"team_name": trimmedStr,
+		"team_name": teamNameParam,
 		"round":     uint(round),
 		"api_code":  uint(api_code),
 		"season":    uint(season),
