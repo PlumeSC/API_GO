@@ -4,6 +4,7 @@ import (
 	core "false_api/modules/core"
 	seasoncore "false_api/modules/core/season_core"
 	"false_api/modules/models"
+	"fmt"
 	"sync"
 )
 
@@ -52,7 +53,7 @@ func (s standingsSerive) GetStandings(info core.Info) ([]map[string]interface{},
 
 func (s standingsSerive) UpdateStandings(info core.Info) error {
 	var wg sync.WaitGroup
-	errChan := make(chan error, 5)
+	errChan := make(chan error, 4)
 	reserve := make(chan struct{}, 2)
 
 	leagueSeasonID, err := s.repo.FindLeagueSeason(info.League, info.Season)
@@ -73,18 +74,20 @@ func (s standingsSerive) UpdateStandings(info core.Info) error {
 			err = s.updateStandings(v, v.Team.Name, leagueSeasonID)
 			if err != nil {
 				errChan <- err
-
 			}
-
 		}(i, v)
 	}
-	for err := range errChan {
-		return err
-	}
-	wg.Done()
+
+	fmt.Println("ok")
+	wg.Wait()
 	close(errChan)
 	close(reserve)
-
+	for err := range errChan {
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
 	return nil
 }
 

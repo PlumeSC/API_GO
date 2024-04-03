@@ -41,7 +41,7 @@ func Init() (*fiber.App, *gorm.DB) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+		// Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect database")
@@ -75,8 +75,7 @@ func Admin(c *fiber.Ctx) error {
 	claims := token.Claims.(jwt.MapClaims)
 	role := claims["role"].(string)
 	if role != "Admin" {
-		return c.Status(fiber.StatusUnauthorized).SendString("Unauthorized")
+		return c.Status(fiber.StatusUnauthorized).SendString("not admin")
 	}
-
 	return c.Next()
 }

@@ -23,7 +23,7 @@
 ## Installation
 1. Clone the repository
 ```bash
-git clone <https://github.com/PlumeSC/API_GO>
+git clone https://github.com/PlumeSC/API_GO
 cd api
 ```
 2. ติดตั้ง Go
@@ -60,6 +60,13 @@ cd api
 - **Match Management**
     - 'POST /creatematch' : สร้างแมทช์การแข่งขัน (ต้องการ authentication และ เป็นAdmin)
         - Body : '{"league":39, "season":2023}' 
-    - 'GET /matches' : ดึงข้อมูลการแข่งขัน หากใส่parameter round จะทำการดึงข้อมูล round นั้นในฤดูกาลนั้นทั้งหมดทั้งหมด หากใส่ Parameter team จะทำการดึงการแข่งขันของทีมนั้นในฤดูกาลนั้นทั้งหมด
-        - Parameters : 'api_code=39&season=2023&team=Brighton&round=1'
-###  league,api_code = {"Premier League":39, "bundesliga":79, "Serie A":135, "La Liga":140}
+    - 'GET /matches' : ดึงข้อมูลการแข่งขัน หากใส่parameter round จะทำการดึงข้อมูลการแข่งขันนั้นในฤดูกาลนั้นทั้งหมด หากใส่ Parameter team จะทำการดึงการแข่งขันของทีมนั้นในฤดูกาลนั้นทั้งหมด
+        - Parameters : 'league=39&season=2023&team=Brighton&round=1'
+
+###  หมายเหตุ
+**league**
+- Premier League : 39,
+- bundesliga : 79,
+- Serie A : 135,
+- La Liga : 140
+                  

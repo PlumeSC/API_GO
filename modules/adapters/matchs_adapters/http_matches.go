@@ -19,7 +19,7 @@ func NewMatchsHandler(service matchscore.MatchsService) *matchsHandler {
 func (h matchsHandler) GetAll(c *fiber.Ctx) error {
 	teamNameParam := c.Query("team")
 	roundParam := c.Query("round")
-	api_codeParam := c.Query("api_code")
+	api_codeParam := c.Query("league")
 	seasonParam := c.Query("season")
 	// var trimmedStr string
 	// if teamNameParam != "" {
